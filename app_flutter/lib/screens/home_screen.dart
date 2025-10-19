@@ -5,6 +5,8 @@ import 'package:video_player/video_player.dart';
 import '../providers/video_provider.dart';
 import './_description_fade_text.dart';
 import './video_feed_item.dart';
+import '../services/backend_api.dart';
+import '../providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,6 +16,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isLoadingFromBackend = false;
+  List<VideoItem> _explore = [];
+  String? _exploreError;
 
   @override
   void initState() {
@@ -23,10 +28,54 @@ class _HomeScreenState extends State<HomeScreen>
         // Rebuild to reflect selected state when swiping between tabs
         if (mounted) setState(() {});
       });
+    _loadUserPosts();
+  }
+
+  Future<void> _loadUserPosts() async {
+    setState(() => _isLoadingFromBackend = true);
+    try {
+      final provider = context.read<VideoProvider>();
+      await provider.loadFromBackend(BackendApi.instance.currentUserId);
+    } catch (e) {
+      print('Error loading posts: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingFromBackend = false);
+    }
+  }
+
+  Future<void> _loadExplore() async {
+    setState(() {
+      _exploreError = null;
+    });
+    try {
+      final api = BackendApi.instance;
+      final posts = await api.getAllPosts();
+      final items = posts.map(api.videoItemFromPost).toList();
+      if (!mounted) return;
+      setState(() {
+        _explore = items;
+      });
+      // Cache items so likes/saves show up in Profile
+      context.read<VideoProvider>().cacheItems(items);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _exploreError = e.toString();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // If auth just became ready/authenticated, ensure posts are loaded
+    final auth = context.watch<AuthProvider>();
+    if (auth.isReady &&
+        auth.isAuthenticated &&
+        !_isLoadingFromBackend &&
+        context.watch<VideoProvider>().myUploads.isEmpty) {
+      // Trigger a load in the next microtask to avoid setState during build
+      Future.microtask(() => _loadUserPosts());
+    }
     return Scaffold(
       body: Stack(
         children: [
@@ -38,31 +87,53 @@ class _HomeScreenState extends State<HomeScreen>
                 // Explore Tab - TikTok-style vertical scroll
                 Builder(
                   builder: (context) {
-                    final uploads = context.watch<VideoProvider>().myUploads;
-                    if (uploads.isEmpty) {
+                    // Ensure explore is loaded
+                    if (_explore.isEmpty && _exploreError == null) {
+                      // Fire and forget; the next build will render when set
+                      Future.microtask(_loadExplore);
+                    }
+
+                    if (_exploreError != null) {
                       return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.explore, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
-                            Text('Explore Feed',
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 8),
-                            Text('Your uploads will appear here for now',
-                                style: TextStyle(color: Colors.grey)),
-                          ],
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: Colors.grey, size: 36),
+                              const SizedBox(height: 12),
+                              const Text('Failed to load Explore feed'),
+                              const SizedBox(height: 8),
+                              Text(_exploreError!,
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                  onPressed: _loadExplore,
+                                  child: const Text('Retry')),
+                            ],
+                          ),
                         ),
                       );
                     }
-                    return PageView.builder(
-                      scrollDirection: Axis.vertical,
-                      itemCount: uploads.length,
-                      itemBuilder: (_, i) {
-                        final video = uploads[i];
-                        return VideoFeedItem(videoItem: video);
-                      },
+
+                    if (_explore.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: _loadExplore,
+                      child: PageView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        scrollDirection: Axis.vertical,
+                        itemCount: _explore.length,
+                        itemBuilder: (_, i) {
+                          final video = _explore[i];
+                          return VideoFeedItem(videoItem: video);
+                        },
+                      ),
                     );
                   },
                 ),

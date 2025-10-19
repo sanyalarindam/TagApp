@@ -1,32 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/video_provider.dart';
+import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/video_feed_item.dart';
+import 'services/backend_api.dart';
 
-class InboxScreen extends StatelessWidget {
-  final List<Map<String, String>> _messages = const [
-    {
-      'username': 'Username',
-      'action': 'Tagged you!',
-      'hashtag': '#Backflip',
-      'time': '3d',
-    },
-    {
-      'username': 'Username',
-      'action': 'Responded to your tag!',
-      'hashtag': '#Rapp Snitches Lick',
-      'time': '4d',
-    },
-    {
-      'username': 'Username',
-      'action': 'Tagged you!',
-      'hashtag': '#Front flip',
-      'time': '3w',
-    },
-  ];
+class InboxScreen extends StatefulWidget {
+  @override
+  State<InboxScreen> createState() => _InboxScreenState();
+}
+
+class _InboxScreenState extends State<InboxScreen> {
+  List<Map<String, dynamic>> _messages = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final api = BackendApi.instance;
+      final msgs = await api.getInbox(api.currentUserId);
+      if (!mounted) return;
+      setState(() {
+        _messages = msgs;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load inbox: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,100 +62,93 @@ class InboxScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 18),
-            Expanded(
-              child: ListView.separated(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: _messages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (ctx, i) {
-                  final msg = _messages[i];
-                  return Material(
-                    color: Colors.transparent,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.black26, width: 1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 2,
-                            offset: Offset(0, 1),
+            if (_loading)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _load,
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: _messages.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (ctx, i) {
+                      final msg = _messages[i];
+                      return Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.black26, width: 1),
+                            boxShadow: const [
+                              BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 2,
+                                  offset: Offset(0, 1)),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: CircleAvatar(
-                              radius: 28,
-                              backgroundColor: Colors.grey[300],
-                              child: const Icon(Icons.person,
-                                  size: 32, color: Colors.black54),
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    text: TextSpan(
-                                      style: const TextStyle(
-                                          fontSize: 16, color: Colors.black),
-                                      children: [
-                                        TextSpan(
-                                            text: msg['username'] ?? '',
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold)),
-                                        TextSpan(
-                                            text: ' ${msg['action'] ?? ''}'),
-                                      ],
-                                    ),
-                                  ),
-                                  if ((msg['hashtag'] ?? '').isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 2.0),
-                                      child: Text(msg['hashtag']!,
-                                          style: const TextStyle(
-                                              fontSize: 15,
-                                              color: Colors.black87)),
-                                    ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2.0),
-                                    child: Text(msg['time']!,
-                                        style: const TextStyle(
-                                            fontSize: 13, color: Colors.grey)),
-                                  ),
-                                ],
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: Colors.grey[300],
+                                  child: const Icon(Icons.person,
+                                      size: 32, color: Colors.black54),
+                                ),
                               ),
-                            ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                          '${msg['fromUserId'] ?? 'Someone'} tagged you',
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w600)),
+                                      if ((msg['postId'] ?? '')
+                                          .toString()
+                                          .isNotEmpty)
+                                        const SizedBox(height: 2),
+                                      Text(msg['createdAt']?.toString() ?? '',
+                                          style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                width: 90,
+                                height: 70,
+                                margin: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[400],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Center(
+                                  child: Text('Preview',
+                                      style: TextStyle(
+                                          fontSize: 20, color: Colors.black)),
+                                ),
+                              ),
+                            ],
                           ),
-                          Container(
-                            width: 90,
-                            height: 70,
-                            margin: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text('Preview',
-                                  style: TextStyle(
-                                      fontSize: 20, color: Colors.black)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -150,32 +156,103 @@ class InboxScreen extends StatelessWidget {
   }
 }
 
-// Placeholder for communities screen
-class CommunityFeedScreen extends StatelessWidget {
+class CommunityFeedScreen extends StatefulWidget {
   final String community;
   const CommunityFeedScreen({Key? key, required this.community})
       : super(key: key);
 
   @override
+  State<CommunityFeedScreen> createState() => _CommunityFeedScreenState();
+}
+
+class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
+  bool _loading = true;
+  String? _error;
+  List<VideoItem> _videos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final api = BackendApi.instance;
+      final posts = await api.getCommunityFeed(widget.community);
+      final items = posts.map(api.videoItemFromPost).toList();
+      // Cache items so like/save works across app
+      // ignore: use_build_context_synchronously
+      if (mounted) context.read<VideoProvider>().cacheItems(items);
+      if (!mounted) return;
+      setState(() {
+        _videos = items;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final videos = context
-        .watch<VideoProvider>()
-        .myUploads
-        .where((v) => v.community.toLowerCase() == community.toLowerCase())
-        .toList();
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          videos.isEmpty
-              ? Center(
-                  child: Text('No videos in $community',
-                      style: TextStyle(fontSize: 18, color: Colors.white)))
-              : PageView.builder(
-                  scrollDirection: Axis.vertical,
-                  itemCount: videos.length,
-                  itemBuilder: (_, i) => VideoFeedItem(videoItem: videos[i]),
-                ),
+          Positioned.fill(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.error_outline,
+                                  color: Colors.white70, size: 36),
+                              const SizedBox(height: 12),
+                              Text('Failed to load community feed',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16)),
+                              const SizedBox(height: 6),
+                              Text(_error!,
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 12),
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                  onPressed: _fetch,
+                                  child: const Text('Retry')),
+                            ],
+                          ),
+                        ),
+                      )
+                    : _videos.isEmpty
+                        ? Center(
+                            child: Text('No videos in ${widget.community}',
+                                style: const TextStyle(
+                                    fontSize: 18, color: Colors.white)))
+                        : RefreshIndicator(
+                            onRefresh: _fetch,
+                            child: PageView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              scrollDirection: Axis.vertical,
+                              itemCount: _videos.length,
+                              itemBuilder: (_, i) =>
+                                  VideoFeedItem(videoItem: _videos[i]),
+                            ),
+                          ),
+          ),
           // Gradient header overlay with title and close button
           Positioned(
             top: 0,
@@ -198,7 +275,7 @@ class CommunityFeedScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 16.0),
                         child: Text(
-                          community,
+                          widget.community,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -220,7 +297,7 @@ class CommunityFeedScreen extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.black54,
                             shape: BoxShape.circle,
                           ),
@@ -442,12 +519,122 @@ void main() {
 class TagApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => VideoProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => VideoProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()..load()),
+      ],
       child: MaterialApp(
         title: 'Tag',
         theme: ThemeData(primarySwatch: Colors.blue),
-        home: MainTabs(),
+        home: const AuthGate(),
+      ),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({Key? key}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    if (!auth.isReady) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return auth.isAuthenticated ? MainTabs() : const SignInScreen();
+  }
+}
+
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({Key? key}) : super(key: key);
+  @override
+  State<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends State<SignInScreen> {
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _doLogin(bool register) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final api = BackendApi.instance;
+      if (register) {
+        await api.register(
+            username: _username.text.trim(), password: _password.text);
+      } else {
+        await api.login(
+            username: _username.text.trim(), password: _password.text);
+      }
+      if (!mounted) return;
+      context.read<AuthProvider>().signInSucceeded();
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted)
+        setState(() {
+          _busy = false;
+        });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Sign in to Tag',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(
+                  controller: _username,
+                  decoration: const InputDecoration(labelText: 'Username')),
+              const SizedBox(height: 8),
+              TextField(
+                  controller: _password,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true),
+              const SizedBox(height: 12),
+              if (_error != null)
+                Text(_error!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _busy ? null : () => _doLogin(false),
+                      child: _busy
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                          : const Text('Sign In'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _busy ? null : () => _doLogin(true),
+                      child: const Text('Create Account'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

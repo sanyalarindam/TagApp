@@ -22,19 +22,40 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.videoItem.path))
-      ..setLooping(true)
-      ..initialize().then((_) {
-        if (!mounted) return;
-        setState(() => _isInitialized = true);
-        _controller.play();
-      });
+    _initControllerForPath(widget.videoItem.path);
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant VideoFeedItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoItem.path != widget.videoItem.path) {
+      // Re-init controller for new video path
+      _controller.dispose();
+      _isInitialized = false;
+      _initControllerForPath(widget.videoItem.path);
+    }
+  }
+
+  void _initControllerForPath(String path) {
+    // Choose file or network controller based on path
+    if (path.startsWith('http')) {
+      _controller = VideoPlayerController.networkUrl(Uri.parse(path));
+    } else {
+      _controller = VideoPlayerController.file(File(path));
+    }
+    _controller
+      ..setLooping(true)
+      ..initialize().then((_) {
+        if (!mounted) return;
+        setState(() => _isInitialized = true);
+        _controller.play();
+      });
   }
 
   Future<void> _openComments() async {
@@ -100,7 +121,13 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                       ),
                     ),
                   )
-                : Container(color: Colors.black),
+                : const Center(
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
           ),
           // Side action buttons (right side, vertically centered)
           Align(
@@ -161,19 +188,19 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                   _ActionButton(
                     icon: context
                             .watch<VideoProvider>()
-                            .isLiked(widget.videoItem.path)
+                            .isLikedItem(widget.videoItem)
                         ? Icons.favorite
                         : Icons.favorite_border,
                     color: context
                             .watch<VideoProvider>()
-                            .isLiked(widget.videoItem.path)
+                            .isLikedItem(widget.videoItem)
                         ? Colors.red
                         : Colors.white,
                     label: '0', // placeholder count
                     onTap: () {
                       context
                           .read<VideoProvider>()
-                          .toggleLike(widget.videoItem.path);
+                          .toggleLikeFor(widget.videoItem);
                     },
                   ),
                   const SizedBox(height: 24),
@@ -192,19 +219,19 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                   _ActionButton(
                     icon: context
                             .watch<VideoProvider>()
-                            .isSaved(widget.videoItem.path)
+                            .isSavedItem(widget.videoItem)
                         ? Icons.bookmark
                         : Icons.bookmark_border,
                     color: context
                             .watch<VideoProvider>()
-                            .isSaved(widget.videoItem.path)
+                            .isSavedItem(widget.videoItem)
                         ? Colors.yellow
                         : Colors.white,
                     label: '',
                     onTap: () {
                       context
                           .read<VideoProvider>()
-                          .toggleSave(widget.videoItem.path);
+                          .toggleSaveFor(widget.videoItem);
                     },
                   ),
                 ],
@@ -314,7 +341,7 @@ class _ActionButton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 32),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/video_provider.dart';
 import 'video_feed_item.dart';
+import '../services/backend_api.dart';
 
 Widget _buildStat(String value, String label) {
   return Column(
@@ -29,6 +31,15 @@ class _ProfileScreenState extends State<ProfileScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Load current username from auth if available
+    try {
+      final name = BackendApi.instance.currentUsername;
+      if (name.isNotEmpty) {
+        _username = name;
+      }
+    } catch (_) {
+      // not authenticated yet; keep placeholder
+    }
   }
 
   @override
@@ -88,7 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildStat('10', 'Posts'),
+            _buildStat(
+                context.watch<VideoProvider>().myUploads.length.toString(),
+                'Posts'),
             SizedBox(width: 24),
             _buildStat('100', 'Followers'),
             SizedBox(width: 24),
@@ -101,6 +114,17 @@ class _ProfileScreenState extends State<ProfileScreen>
             // Edit profile logic placeholder
           },
           child: Text('Edit Profile'),
+        ),
+        SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () async {
+            // Clear any user-local state
+            context.read<VideoProvider>().clear();
+            await context.read<AuthProvider>().signOut();
+          },
+          icon: const Icon(Icons.logout),
+          label: const Text('Sign Out'),
+          style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
         ),
         SizedBox(height: 8),
       ],

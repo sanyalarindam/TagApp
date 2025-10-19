@@ -1,0 +1,1906 @@
+{
+  "service": {
+    "service": "tagapp-backend",
+    "serviceObject": {
+      "name": "tagapp-backend"
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-west-2",
+      "environment": {
+        "S3_BUCKET": "tagapp-videos",
+        "USERS_TABLE": "Users",
+        "POSTS_TABLE": "Posts",
+        "COMMUNITIES_TABLE": "Communities",
+        "INBOX_TABLE": "Inbox",
+        "JWT_SECRET": "dev-secret-change-me"
+      },
+      "iam": {
+        "role": {
+          "statements": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+              ],
+              "Resource": "arn:aws:s3:::tagapp-videos/*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:BatchWriteItem"
+              ],
+              "Resource": [
+                "arn:aws:dynamodb:us-west-2:*:table/Users",
+                "arn:aws:dynamodb:us-west-2:*:table/Posts",
+                "arn:aws:dynamodb:us-west-2:*:table/Communities",
+                "arn:aws:dynamodb:us-west-2:*:table/Inbox"
+              ]
+            }
+          ]
+        }
+      },
+      "stage": "dev",
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "PresignUploadLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-presignUpload"
+            }
+          },
+          "CreatePostLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-createPost"
+            }
+          },
+          "GetCommunityFeedLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-getCommunityFeed"
+            }
+          },
+          "GetUserLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-getUser"
+            }
+          },
+          "UpdateUserLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-updateUser"
+            }
+          },
+          "GetInboxLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-getInbox"
+            }
+          },
+          "GetVideoUrlLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-getVideoUrl"
+            }
+          },
+          "GetUserPostsLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-getUserPosts"
+            }
+          },
+          "RegisterLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-register"
+            }
+          },
+          "LoginLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/tagapp-backend-dev-login"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "tagapp-backend",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/tagapp-backend-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/tagapp-backend-dev*:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iam\"][\"role\"][\"statements\"][0]"
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iam\"][\"role\"][\"statements\"][1]"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "tagapp-backend",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "PresignUploadLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/presign.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-presignUpload",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "PresignUploadLogGroup"
+            ]
+          },
+          "CreatePostLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/posts.create",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-createPost",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "CreatePostLogGroup"
+            ]
+          },
+          "GetCommunityFeedLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/posts.getCommunityFeed",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-getCommunityFeed",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetCommunityFeedLogGroup"
+            ]
+          },
+          "GetUserLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/users.get",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-getUser",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetUserLogGroup"
+            ]
+          },
+          "UpdateUserLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/users.update",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-updateUser",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "UpdateUserLogGroup"
+            ]
+          },
+          "GetInboxLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/inbox.get",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-getInbox",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetInboxLogGroup"
+            ]
+          },
+          "GetVideoUrlLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/get-video-url.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-getVideoUrl",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetVideoUrlLogGroup"
+            ]
+          },
+          "GetUserPostsLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/posts.getUserPosts",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-getUserPosts",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetUserPostsLogGroup"
+            ]
+          },
+          "RegisterLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/auth.register",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-register",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "RegisterLogGroup"
+            ]
+          },
+          "LoginLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+              },
+              "Handler": "src/auth.login",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "tagapp-backend-dev-login",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "S3_BUCKET": "tagapp-videos",
+                  "USERS_TABLE": "Users",
+                  "POSTS_TABLE": "Posts",
+                  "COMMUNITIES_TABLE": "Communities",
+                  "INBOX_TABLE": "Inbox",
+                  "JWT_SECRET": "dev-secret-change-me"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "LoginLogGroup"
+            ]
+          },
+          "PresignUploadLambdaVersionKwuAxZPGrTq66IfwBgSplHxKSdv6Gxy5xxN2Cs911s": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "PresignUploadLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "CreatePostLambdaVersionOghfoYFMBTSB01kAvRKzh8ecYedxezc2eDX2JhTzYM": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "CreatePostLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "GetCommunityFeedLambdaVersionkTOZt0cD6IYbNOUDplmITdl8AZJAWhyhjOaCwiEcF4": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetCommunityFeedLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "GetUserLambdaVersionmRFjNYrbvNkyZ3zKWnm3WPh8aU04Tw49ButfllDEkw": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetUserLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "UpdateUserLambdaVersionorhDQucWf8OZjdL63BevMW8M6K71fu4B6tbOY04": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "UpdateUserLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "GetInboxLambdaVersionlZoE2Xyf5ja0EOX2Xh1rcH3cdq5yaUv186aJdrmqYa8": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetInboxLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "GetVideoUrlLambdaVersionz0L8bKfMeqAibNnDdgf1N7bNyaY950ibaTfOkMSGCkM": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetVideoUrlLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "GetUserPostsLambdaVersion0UzR7jZCw0boGj9eQP70euVx8DSwxdcEEQMEIqa120": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetUserPostsLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "RegisterLambdaVersion9zo6I1L7FJ6FwYkrjHTUPQdScNR9vjuaeL2GtxFk": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "RegisterLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "LoginLambdaVersiondnph5AHav8qTaqF2nke1jJ24qC8kdbXwLYrHT90nv4": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "LoginLambdaFunction"
+              },
+              "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+            }
+          },
+          "HttpApi": {
+            "Type": "AWS::ApiGatewayV2::Api",
+            "Properties": {
+              "Name": "dev-tagapp-backend",
+              "ProtocolType": "HTTP"
+            }
+          },
+          "HttpApiStage": {
+            "Type": "AWS::ApiGatewayV2::Stage",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "StageName": "$default",
+              "AutoDeploy": true,
+              "DefaultRouteSettings": {
+                "DetailedMetricsEnabled": false
+              }
+            }
+          },
+          "PresignUploadLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "PresignUploadLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationPresignUpload": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"PresignUploadLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePostPresign": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "POST /presign",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationPresignUpload"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationPresignUpload"
+          },
+          "CreatePostLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "CreatePostLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationCreatePost": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"CreatePostLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePostPosts": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "POST /posts",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationCreatePost"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationCreatePost"
+          },
+          "GetCommunityFeedLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetCommunityFeedLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetCommunityFeed": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetCommunityFeedLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetCommunitiesCommunityidVarPosts": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /communities/{communityId}/posts",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetCommunityFeed"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetCommunityFeed"
+          },
+          "GetUserLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetUserLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetUser": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetUserLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetUsersUseridVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /users/{userId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetUser"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetUser"
+          },
+          "UpdateUserLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "UpdateUserLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationUpdateUser": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"UpdateUserLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePutUsersUseridVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "PUT /users/{userId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationUpdateUser"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationUpdateUser"
+          },
+          "GetInboxLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetInboxLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetInbox": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetInboxLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetUsersUseridVarInbox": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /users/{userId}/inbox",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetInbox"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetInbox"
+          },
+          "GetVideoUrlLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetVideoUrlLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetVideoUrl": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetVideoUrlLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetVideoDashurlObjectkeyVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /video-url/{objectKey+}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetVideoUrl"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetVideoUrl"
+          },
+          "GetUserPostsLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetUserPostsLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetUserPosts": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetUserPostsLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetUsersUseridVarPosts": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /users/{userId}/posts",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetUserPosts"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetUserPosts"
+          },
+          "RegisterLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "RegisterLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationRegister": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"RegisterLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePostAuthRegister": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "POST /auth/register",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationRegister"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationRegister"
+          },
+          "LoginLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "LoginLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationLogin": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"LoginLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePostAuthLogin": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "POST /auth/login",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationLogin"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationLogin"
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "PresignUploadLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "PresignUploadLambdaVersionKwuAxZPGrTq66IfwBgSplHxKSdv6Gxy5xxN2Cs911s"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-PresignUploadLambdaFunctionQualifiedArn"
+            }
+          },
+          "CreatePostLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "CreatePostLambdaVersionOghfoYFMBTSB01kAvRKzh8ecYedxezc2eDX2JhTzYM"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-CreatePostLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetCommunityFeedLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetCommunityFeedLambdaVersionkTOZt0cD6IYbNOUDplmITdl8AZJAWhyhjOaCwiEcF4"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-GetCommunityFeedLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetUserLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetUserLambdaVersionmRFjNYrbvNkyZ3zKWnm3WPh8aU04Tw49ButfllDEkw"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-GetUserLambdaFunctionQualifiedArn"
+            }
+          },
+          "UpdateUserLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "UpdateUserLambdaVersionorhDQucWf8OZjdL63BevMW8M6K71fu4B6tbOY04"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-UpdateUserLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetInboxLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetInboxLambdaVersionlZoE2Xyf5ja0EOX2Xh1rcH3cdq5yaUv186aJdrmqYa8"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-GetInboxLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetVideoUrlLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetVideoUrlLambdaVersionz0L8bKfMeqAibNnDdgf1N7bNyaY950ibaTfOkMSGCkM"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-GetVideoUrlLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetUserPostsLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetUserPostsLambdaVersion0UzR7jZCw0boGj9eQP70euVx8DSwxdcEEQMEIqa120"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-GetUserPostsLambdaFunctionQualifiedArn"
+            }
+          },
+          "RegisterLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "RegisterLambdaVersion9zo6I1L7FJ6FwYkrjHTUPQdScNR9vjuaeL2GtxFk"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-RegisterLambdaFunctionQualifiedArn"
+            }
+          },
+          "LoginLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "LoginLambdaVersiondnph5AHav8qTaqF2nke1jJ24qC8kdbXwLYrHT90nv4"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-LoginLambdaFunctionQualifiedArn"
+            }
+          },
+          "HttpApiId": {
+            "Description": "Id of the HTTP API",
+            "Value": {
+              "Ref": "HttpApi"
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-HttpApiId"
+            }
+          },
+          "HttpApiUrl": {
+            "Description": "URL of the HTTP API",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  }
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-tagapp-backend-dev-HttpApiUrl"
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "plugins": [],
+    "pluginsData": {},
+    "functions": {
+      "presignUpload": {
+        "handler": "src/presign.handler",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/presign",
+              "method": "post"
+            },
+            "resolvedMethod": "POST",
+            "resolvedPath": "/presign"
+          }
+        ],
+        "name": "tagapp-backend-dev-presignUpload",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "PresignUploadLambdaVersionKwuAxZPGrTq66IfwBgSplHxKSdv6Gxy5xxN2Cs911s"
+      },
+      "createPost": {
+        "handler": "src/posts.create",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/posts",
+              "method": "post"
+            },
+            "resolvedMethod": "POST",
+            "resolvedPath": "/posts"
+          }
+        ],
+        "name": "tagapp-backend-dev-createPost",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "CreatePostLambdaVersionOghfoYFMBTSB01kAvRKzh8ecYedxezc2eDX2JhTzYM"
+      },
+      "getCommunityFeed": {
+        "handler": "src/posts.getCommunityFeed",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/communities/{communityId}/posts",
+              "method": "get"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/communities/{communityId}/posts"
+          }
+        ],
+        "name": "tagapp-backend-dev-getCommunityFeed",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetCommunityFeedLambdaVersionkTOZt0cD6IYbNOUDplmITdl8AZJAWhyhjOaCwiEcF4"
+      },
+      "getUser": {
+        "handler": "src/users.get",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/users/{userId}",
+              "method": "get"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/users/{userId}"
+          }
+        ],
+        "name": "tagapp-backend-dev-getUser",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetUserLambdaVersionmRFjNYrbvNkyZ3zKWnm3WPh8aU04Tw49ButfllDEkw"
+      },
+      "updateUser": {
+        "handler": "src/users.update",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/users/{userId}",
+              "method": "put"
+            },
+            "resolvedMethod": "PUT",
+            "resolvedPath": "/users/{userId}"
+          }
+        ],
+        "name": "tagapp-backend-dev-updateUser",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "UpdateUserLambdaVersionorhDQucWf8OZjdL63BevMW8M6K71fu4B6tbOY04"
+      },
+      "getInbox": {
+        "handler": "src/inbox.get",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/users/{userId}/inbox",
+              "method": "get"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/users/{userId}/inbox"
+          }
+        ],
+        "name": "tagapp-backend-dev-getInbox",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetInboxLambdaVersionlZoE2Xyf5ja0EOX2Xh1rcH3cdq5yaUv186aJdrmqYa8"
+      },
+      "getVideoUrl": {
+        "handler": "src/get-video-url.handler",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/video-url/{objectKey+}",
+              "method": "get"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/video-url/{objectKey+}"
+          }
+        ],
+        "name": "tagapp-backend-dev-getVideoUrl",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetVideoUrlLambdaVersionz0L8bKfMeqAibNnDdgf1N7bNyaY950ibaTfOkMSGCkM"
+      },
+      "getUserPosts": {
+        "handler": "src/posts.getUserPosts",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/users/{userId}/posts",
+              "method": "get"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/users/{userId}/posts"
+          }
+        ],
+        "name": "tagapp-backend-dev-getUserPosts",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetUserPostsLambdaVersion0UzR7jZCw0boGj9eQP70euVx8DSwxdcEEQMEIqa120"
+      },
+      "register": {
+        "handler": "src/auth.register",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/auth/register",
+              "method": "post"
+            },
+            "resolvedMethod": "POST",
+            "resolvedPath": "/auth/register"
+          }
+        ],
+        "name": "tagapp-backend-dev-register",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "RegisterLambdaVersion9zo6I1L7FJ6FwYkrjHTUPQdScNR9vjuaeL2GtxFk"
+      },
+      "login": {
+        "handler": "src/auth.login",
+        "events": [
+          {
+            "httpApi": {
+              "path": "/auth/login",
+              "method": "post"
+            },
+            "resolvedMethod": "POST",
+            "resolvedPath": "/auth/login"
+          }
+        ],
+        "name": "tagapp-backend-dev-login",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "LoginLambdaVersiondnph5AHav8qTaqF2nke1jJ24qC8kdbXwLYrHT90nv4"
+      }
+    },
+    "configValidationMode": "warn",
+    "serviceFilename": "serverless.yml",
+    "initialServerlessConfig": {
+      "service": "tagapp-backend",
+      "frameworkVersion": "3",
+      "provider": {
+        "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "plugins": {
+        "$ref": "$[\"service\"][\"plugins\"]"
+      },
+      "functions": {
+        "$ref": "$[\"service\"][\"functions\"]"
+      }
+    },
+    "layers": {},
+    "isDashboardMonitoringPreconfigured": false,
+    "artifact": "C:\\Users\\arind\\Music\\TAG\\TagApp\\backend\\.serverless\\tagapp-backend.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z",
+    "artifact": "tagapp-backend.zip"
+  }
+}

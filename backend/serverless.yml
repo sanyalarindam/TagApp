@@ -1,0 +1,102 @@
+service: tagapp-backend
+frameworkVersion: '3'
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+  environment:
+    S3_BUCKET: tagapp-videos
+    USERS_TABLE: Users
+    POSTS_TABLE: Posts
+    COMMUNITIES_TABLE: Communities
+    INBOX_TABLE: Inbox
+    JWT_SECRET: ${env:TAGAPP_JWT_SECRET, 'dev-secret-change-me'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource: arn:aws:s3:::tagapp-videos/*
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+          Resource:
+            - arn:aws:dynamodb:us-west-2:*:table/Users
+            - arn:aws:dynamodb:us-west-2:*:table/Posts
+            - arn:aws:dynamodb:us-west-2:*:table/Communities
+            - arn:aws:dynamodb:us-west-2:*:table/Inbox
+plugins: []
+functions:
+  presignUpload:
+    handler: src/presign.handler
+    events:
+      - httpApi:
+          path: /presign
+          method: post
+  createPost:
+    handler: src/posts.create
+    events:
+      - httpApi:
+          path: /posts
+          method: post
+  getAllPosts:
+    handler: src/posts.getAll
+    events:
+      - httpApi:
+          path: /posts
+          method: get
+  getCommunityFeed:
+    handler: src/posts.getCommunityFeed
+    events:
+      - httpApi:
+          path: /communities/{communityId}/posts
+          method: get
+  getUser:
+    handler: src/users.get
+    events:
+      - httpApi:
+          path: /users/{userId}
+          method: get
+  updateUser:
+    handler: src/users.update
+    events:
+      - httpApi:
+          path: /users/{userId}
+          method: put
+  getInbox:
+    handler: src/inbox.get
+    events:
+      - httpApi:
+          path: /users/{userId}/inbox
+          method: get
+  getVideoUrl:
+    handler: src/get-video-url.handler
+    events:
+      - httpApi:
+          path: /video-url/{objectKey+}
+          method: get
+  getUserPosts:
+    handler: src/posts.getUserPosts
+    events:
+      - httpApi:
+          path: /users/{userId}/posts
+          method: get
+  register:
+    handler: src/auth.register
+    events:
+      - httpApi:
+          path: /auth/register
+          method: post
+  login:
+    handler: src/auth.login
+    events:
+      - httpApi:
+          path: /auth/login
+          method: post

@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/video_provider.dart';
+import '../services/backend_api.dart';
 
 class CameraScreen extends StatefulWidget {
   @override
@@ -71,19 +73,49 @@ class _CameraScreenState extends State<CameraScreen> {
           );
         },
       );
-      // Save into global state for Profile/Home
+      // Upload to backend (presign -> S3 upload -> create post)
       try {
+        final api = BackendApi.instance;
+        final presign = await api.getPresignedUrl(contentType: 'video/mp4');
+        await api.uploadToPresignedUrl(
+          uploadUrl: presign['uploadUrl']!,
+          file: File(video.path),
+          contentType: 'video/mp4',
+        );
+        // Store the S3 key, backend will generate presigned URLs when fetching
+        final objectKey = presign['objectKey']!;
+        await api.createPost(
+          userId: api.currentUserId,
+          username: api.currentUsername,
+          videoUrl: objectKey, // Just the S3 key
+          description: _descriptionController.text.trim(),
+          hashtags: _hashtagController.text.isEmpty
+              ? []
+              : [_hashtagController.text.trim()],
+          taggedFriends: const [],
+          taggedCommunities: _communityController.text.isEmpty
+              ? []
+              : [_communityController.text.trim()],
+        );
+
+        // Optimistically add to local UI feed with full URL for immediate playback
         final provider = context.read<VideoProvider>();
         provider.addLocalVideo(
-          video.path,
+          video.path, // Keep local path for immediate playback
           description: _descriptionController.text.trim(),
           hashtag: _hashtagController.text.trim(),
           community: _communityController.text.trim(),
         );
-      } catch (_) {}
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Picked video: ${video.name}')),
-      );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Uploaded ${video.name}')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+
       _descriptionController.clear();
       _hashtagController.clear();
       _communityController.clear();
