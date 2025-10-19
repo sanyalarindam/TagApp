@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/video_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/friends_screen.dart';
 import 'screens/camera_screen.dart';
@@ -22,10 +24,13 @@ void main() {
 class TagApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Tag',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: MainTabs(),
+    return ChangeNotifierProvider(
+      create: (_) => VideoProvider(),
+      child: MaterialApp(
+        title: 'Tag',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: MainTabs(),
+      ),
     );
   }
 }

@@ -1,184 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:provider/provider.dart';
 import '../providers/video_provider.dart';
 import './_description_fade_text.dart';
-import './video_feed_item.dart';
 
-class HomeScreen extends StatefulWidget {
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this)
-      ..addListener(() {
-        // Rebuild to reflect selected state when swiping between tabs
-        if (mounted) setState(() {});
-      });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Content: Tab views for Explore and Search
-          Positioned.fill(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Explore Tab - TikTok-style vertical scroll
-                Builder(
-                  builder: (context) {
-                    final uploads = context.watch<VideoProvider>().myUploads;
-                    if (uploads.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.explore, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
-                            Text('Explore Feed',
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 8),
-                            Text('Your uploads will appear here for now',
-                                style: TextStyle(color: Colors.grey)),
-                          ],
-                        ),
-                      );
-                    }
-                    return PageView.builder(
-                      scrollDirection: Axis.vertical,
-                      itemCount: uploads.length,
-                      itemBuilder: (_, i) {
-                        final video = uploads[i];
-                        return VideoFeedItem(videoItem: video);
-                      },
-                    );
-                  },
-                ),
-                // Search Tab
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.search, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text('Search',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 8),
-                      Text('Find challenges, users, or communities',
-                          style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Overlay: Gradient header with white text buttons
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 16,
-                right: 16,
-                bottom: 12,
-              ),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black, Colors.transparent],
-                  stops: [0.0, 1.0],
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _TopTabButton(
-                    label: 'Explore',
-                    selected: _tabController.index == 0,
-                    onTap: () => _tabController.animateTo(0),
-                  ),
-                  const SizedBox(width: 16),
-                  _TopTabButton(
-                    label: 'Search',
-                    selected: _tabController.index == 1,
-                    onTap: () => _tabController.animateTo(1),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Small top buttons for Explore/Search with white text
-class _TopTabButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _TopTabButton({
-    Key? key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected
-              ? Colors.white.withOpacity(0.15)
-              : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: Colors.white.withOpacity(selected ? 0.9 : 0.4), width: 1),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// TikTok-style video feed item with side buttons
-class _VideoFeedItem extends StatefulWidget {
+class VideoFeedItem extends StatefulWidget {
   final VideoItem videoItem;
-  const _VideoFeedItem({Key? key, required this.videoItem}) : super(key: key);
+  const VideoFeedItem({Key? key, required this.videoItem}) : super(key: key);
 
   @override
-  State<_VideoFeedItem> createState() => _VideoFeedItemState();
+  State<VideoFeedItem> createState() => _VideoFeedItemState();
 }
 
-class _VideoFeedItemState extends State<_VideoFeedItem> {
+class _VideoFeedItemState extends State<VideoFeedItem> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
 
@@ -207,16 +42,28 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Video player (full width, centered vertically)
+          // Video player (full width, centered vertically) with tap-to-pause
           Center(
             child: _isInitialized
-                ? SizedBox.expand(
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: _controller.value.size.width,
-                        height: _controller.value.size.height,
-                        child: VideoPlayer(_controller),
+                ? GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      setState(() {
+                        if (_controller.value.isPlaying) {
+                          _controller.pause();
+                        } else {
+                          _controller.play();
+                        }
+                      });
+                    },
+                    child: SizedBox.expand(
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: _controller.value.size.width,
+                          height: _controller.value.size.height,
+                          child: VideoPlayer(_controller),
+                        ),
                       ),
                     ),
                   )
@@ -389,7 +236,6 @@ class _VideoFeedItemState extends State<_VideoFeedItem> {
   }
 }
 
-// Reusable action button widget
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final Color color;

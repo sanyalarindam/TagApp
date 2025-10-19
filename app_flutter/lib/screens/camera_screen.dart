@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../providers/video_provider.dart';
 
 class CameraScreen extends StatefulWidget {
   @override
-  _CameraScreenState createState() => _CameraScreenState();
+  State<CameraScreen> createState() => _CameraScreenState();
 }
 
 class _CameraScreenState extends State<CameraScreen> {
   String? _pickedVideoPath;
+  final TextEditingController _hashtagController = TextEditingController();
+  final TextEditingController _communityController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   Future<void> _pickVideo() async {
     final picker = ImagePicker();
@@ -16,10 +21,72 @@ class _CameraScreenState extends State<CameraScreen> {
       setState(() {
         _pickedVideoPath = video.path;
       });
+      // Show dialog to enter description, hashtag, and community
+      await showDialog(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: Text('Tag your video'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                    ),
+                    maxLines: 3,
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
+                    controller: _hashtagController,
+                    decoration: InputDecoration(
+                      labelText: 'Hashtag (challenge)',
+                      prefixText: '#',
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
+                    controller: _communityController,
+                    decoration: InputDecoration(
+                      labelText: 'Community',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: Text('Cancel'),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              ElevatedButton(
+                child: Text('Upload'),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+      // Save into global state for Profile/Home
+      try {
+        final provider = context.read<VideoProvider>();
+        provider.addLocalVideo(
+          video.path,
+          description: _descriptionController.text.trim(),
+          hashtag: _hashtagController.text.trim(),
+          community: _communityController.text.trim(),
+        );
+      } catch (_) {}
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Picked video: ${video.name}')),
       );
-      // TODO: Upload logic here
+      _descriptionController.clear();
+      _hashtagController.clear();
+      _communityController.clear();
     }
   }
 
