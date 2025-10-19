@@ -16,10 +16,26 @@ class VideoItem {
   }) : createdAt = createdAt ?? DateTime.now();
 }
 
+class Comment {
+  final String id;
+  final String author; // simple display name for now
+  final String text;
+  final DateTime createdAt;
+
+  Comment(
+      {required this.id,
+      required this.author,
+      required this.text,
+      DateTime? createdAt})
+      : createdAt = createdAt ?? DateTime.now();
+}
+
 class VideoProvider extends ChangeNotifier {
   final List<VideoItem> _myUploads = [];
   final Set<String> _likedPaths = {}; // paths of liked videos
   final Set<String> _savedPaths = {}; // paths of saved videos
+  // path -> list of comments
+  final Map<String, List<Comment>> _comments = {};
 
   List<VideoItem> get myUploads => List.unmodifiable(_myUploads);
 
@@ -31,6 +47,18 @@ class VideoProvider extends ChangeNotifier {
 
   bool isLiked(String path) => _likedPaths.contains(path);
   bool isSaved(String path) => _savedPaths.contains(path);
+
+  // Comments API
+  List<Comment> commentsFor(String path) =>
+      List.unmodifiable(_comments[path] ?? const []);
+  int commentCount(String path) => _comments[path]?.length ?? 0;
+  void addComment(String path, String author, String text) {
+    if (text.trim().isEmpty) return;
+    final list = _comments.putIfAbsent(path, () => []);
+    list.add(
+        Comment(id: UniqueKey().toString(), author: author, text: text.trim()));
+    notifyListeners();
+  }
 
   void addLocalVideo(String path,
       {String description = '', String hashtag = '', String community = ''}) {
@@ -51,6 +79,7 @@ class VideoProvider extends ChangeNotifier {
     _myUploads.removeWhere((v) => v.path == path);
     _likedPaths.remove(path);
     _savedPaths.remove(path);
+    _comments.remove(path);
     notifyListeners();
   }
 

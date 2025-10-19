@@ -16,6 +16,7 @@ class VideoFeedItem extends StatefulWidget {
 class _VideoFeedItemState extends State<VideoFeedItem> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _wasPlayingBeforeSheet = false;
 
   @override
   void initState() {
@@ -33,6 +34,37 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _openComments() async {
+    // Pause video when opening; remember state to resume later
+    if (_isInitialized) {
+      _wasPlayingBeforeSheet = _controller.value.isPlaying;
+      await _controller.pause();
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.black87,
+      barrierColor: Colors.black54,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final height = MediaQuery.of(ctx).size.height;
+        final sheetHeight = height * 0.65; // roughly 3/5 to 2/3 of screen
+        return SizedBox(
+          height: sheetHeight,
+          child: _CommentsSheet(videoPath: widget.videoItem.path),
+        );
+      },
+    );
+
+    // Resume if it was playing before
+    if (_isInitialized && _wasPlayingBeforeSheet) {
+      await _controller.play();
+    }
   }
 
   @override
@@ -142,6 +174,17 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                           .read<VideoProvider>()
                           .toggleLike(widget.videoItem.path);
                     },
+                  ),
+                  const SizedBox(height: 24),
+                  // Comments button
+                  _ActionButton(
+                    icon: Icons.comment,
+                    color: Colors.white,
+                    label: context
+                        .watch<VideoProvider>()
+                        .commentCount(widget.videoItem.path)
+                        .toString(),
+                    onTap: _openComments,
                   ),
                   const SizedBox(height: 24),
                   // Save (favorite) button
@@ -279,5 +322,169 @@ class _ActionButton extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _CommentsSheet extends StatefulWidget {
+  final String videoPath;
+  const _CommentsSheet({Key? key, required this.videoPath}) : super(key: key);
+
+  @override
+  State<_CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends State<_CommentsSheet> {
+  final TextEditingController _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<VideoProvider>();
+    final comments = provider.commentsFor(widget.videoPath);
+
+    return SafeArea(
+      top: false,
+      child: Column(
+        children: [
+          // Drag handle
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 12),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Text(
+                  'Comments (${provider.commentCount(widget.videoPath)})',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white70),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          // Comments list
+          Expanded(
+            child: comments.isEmpty
+                ? const Center(
+                    child: Text('No comments yet',
+                        style: TextStyle(color: Colors.white60)),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemBuilder: (ctx, i) {
+                      final c = comments[i];
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const CircleAvatar(
+                              radius: 16, child: Icon(Icons.person, size: 18)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(c.author,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 4),
+                                Text(c.text,
+                                    style:
+                                        const TextStyle(color: Colors.white)),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _timeAgo(c.createdAt),
+                                  style: const TextStyle(
+                                      color: Colors.white38, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemCount: comments.length,
+                  ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          // Input area
+          Padding(
+            padding: EdgeInsets.only(
+              left: 12,
+              right: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+              top: 8,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _textController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment...',
+                      hintStyle: const TextStyle(color: Colors.white54),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.white),
+                  onPressed: _submit,
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submit() {
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+    context.read<VideoProvider>().addComment(widget.videoPath, 'You', text);
+    _textController.clear();
+  }
+
+  String _timeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }
