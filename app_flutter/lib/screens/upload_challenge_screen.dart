@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/backend_api.dart';
 
 class UploadChallengeScreen extends StatefulWidget {
   final String challengeDescription;
@@ -13,6 +14,7 @@ class _UploadChallengeScreenState extends State<UploadChallengeScreen> {
   String? _videoPath;
   bool _isSubmitting = false;
   String? _aiResult;
+  bool _isVerified = false;
 
   // Placeholder for video picker/recorder
   Future<void> _pickVideo() async {
@@ -26,13 +28,58 @@ class _UploadChallengeScreenState extends State<UploadChallengeScreen> {
   Future<void> _submitChallenge() async {
     setState(() {
       _isSubmitting = true;
+      _aiResult = null;
+      _isVerified = false;
     });
-    await Future.delayed(const Duration(seconds: 2)); // Simulate network call
-    // TODO: Replace with actual AI confirmation logic
-    setState(() {
-      _aiResult = 'AI confirms video matches challenge description!';
-      _isSubmitting = false;
-    });
+    try {
+      final api = BackendApi.instance;
+      await api.createPost(
+        userId: api.currentUserId,
+        username: api.currentUsername,
+        videoUrl: _videoPath ?? '',
+        description: widget.challengeDescription,
+        hashtags: const [],
+        taggedFriends: const [],
+        taggedUsernames: const [],
+        taggedCommunities: const [],
+      );
+      setState(() {
+        _aiResult = '✅ Verified: Your video matches the challenge!';
+        _isVerified = true;
+        _isSubmitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Verified: Your video matches the challenge!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      final msg = e.toString();
+      setState(() {
+        _isVerified = false;
+        if (msg.contains('400') && msg.contains('Video does not match')) {
+          _aiResult =
+              '❌ Not Verified: Your video does not match the challenge.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  '❌ Not Verified: Your video does not match the challenge.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          _aiResult = '❌ Upload failed: $msg';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Upload failed: $msg'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        _isSubmitting = false;
+      });
+    }
   }
 
   @override
@@ -61,16 +108,22 @@ class _UploadChallengeScreenState extends State<UploadChallengeScreen> {
             ElevatedButton(
               child: _isSubmitting
                   ? const CircularProgressIndicator()
-                  : const Text('Submit'),
-              onPressed: (_videoPath != null && !_isSubmitting)
+                  : (_isVerified
+                      ? const Text('Verified!')
+                      : const Text('Submit')),
+              onPressed: (_videoPath != null && !_isSubmitting && !_isVerified)
                   ? _submitChallenge
                   : null,
             ),
             if (_aiResult != null) ...[
               const SizedBox(height: 24),
-              Text(_aiResult!,
-                  style: TextStyle(
-                      color: Colors.green, fontWeight: FontWeight.bold)),
+              Text(
+                _aiResult!,
+                style: TextStyle(
+                  color: _aiResult!.startsWith('✅') ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ],
         ),

@@ -96,7 +96,9 @@ class BackendApi {
     String description = '',
     List<String> hashtags = const [],
     List<String> taggedFriends = const [],
+    List<String> taggedUsernames = const [],
     List<String> taggedCommunities = const [],
+    String? responseToPostId,
   }) async {
     final res = await http.post(Uri.parse('$baseUrl/posts'),
         headers: {'content-type': 'application/json'},
@@ -107,7 +109,9 @@ class BackendApi {
           'description': description,
           'hashtags': hashtags,
           'taggedFriends': taggedFriends,
+          'taggedUsernames': taggedUsernames,
           'taggedCommunities': taggedCommunities,
+          if (responseToPostId != null) 'responseToPostId': responseToPostId,
         }));
     if (res.statusCode != 201) {
       throw Exception('createPost failed: ${res.statusCode} ${res.body}');

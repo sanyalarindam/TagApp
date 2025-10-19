@@ -109,8 +109,28 @@ class _InboxScreenState extends State<InboxScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                          '${msg['fromUserId'] ?? 'Someone'} tagged you',
+                                      Text((() {
+                                        final uname = msg['fromUsername'];
+                                        final uid = msg['fromUserId'];
+                                        final type =
+                                            (msg['type']?.toString() ?? '')
+                                                .toLowerCase();
+                                        if (uname != null &&
+                                            uname
+                                                .toString()
+                                                .trim()
+                                                .isNotEmpty) {
+                                          if (type == 'response') {
+                                            return '$uname responded to your challenge';
+                                          }
+                                          return '$uname tagged you';
+                                        } else if (uid != null &&
+                                            uid.toString().trim().isNotEmpty) {
+                                          return 'User $uid tagged you';
+                                        } else {
+                                          return 'Someone tagged you';
+                                        }
+                                      })(),
                                           style: const TextStyle(
                                               fontSize: 16,
                                               color: Colors.black,
@@ -127,18 +147,56 @@ class _InboxScreenState extends State<InboxScreen> {
                                   ),
                                 ),
                               ),
-                              Container(
-                                width: 90,
-                                height: 70,
-                                margin: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[400],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Center(
-                                  child: Text('Preview',
-                                      style: TextStyle(
-                                          fontSize: 20, color: Colors.black)),
+                              GestureDetector(
+                                onTap: () async {
+                                  // Fetch post details from backend
+                                  final api = BackendApi.instance;
+                                  final postId =
+                                      msg['postId']?.toString() ?? '';
+                                  if (postId.isEmpty) return;
+                                  try {
+                                    final posts = await api.getAllPosts();
+                                    final post = posts.firstWhere(
+                                      (p) => p['postId'] == postId,
+                                      orElse: () => <String, dynamic>{},
+                                    );
+                                    if (post.isNotEmpty) {
+                                      final videoItem =
+                                          api.videoItemFromPost(post);
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => PostDetailScreen(
+                                            videoItem: videoItem,
+                                            showChallengeButton:
+                                                (msg['type']?.toString() ??
+                                                        '') ==
+                                                    'tag',
+                                            inboxMessage: msg,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('Failed to load post: $e')),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: 90,
+                                  height: 70,
+                                  margin: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[400],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Center(
+                                    child: Text('Preview',
+                                        style: TextStyle(
+                                            fontSize: 20, color: Colors.black)),
+                                  ),
                                 ),
                               ),
                             ],
@@ -151,6 +209,72 @@ class _InboxScreenState extends State<InboxScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Post detail screen for inbox preview and challenge response
+class PostDetailScreen extends StatelessWidget {
+  final VideoItem videoItem;
+  final bool showChallengeButton;
+  final Map<String, dynamic>? inboxMessage;
+  const PostDetailScreen(
+      {Key? key,
+      required this.videoItem,
+      this.showChallengeButton = false,
+      this.inboxMessage})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text('Post Detail'),
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: VideoFeedItem(videoItem: videoItem),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (showChallengeButton)
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Take on the challenge!'),
+                        onPressed: () async {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => CameraScreen(
+                                prefillHashtag: videoItem.hashtag,
+                                prefillCommunity: videoItem.community,
+                                responseToPostId: videoItem.id,
+                                responseToUsername:
+                                    inboxMessage?['fromUsername'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -526,6 +650,7 @@ class TagApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Tag',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(primarySwatch: Colors.blue),
         home: const AuthGate(),
       ),

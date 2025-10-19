@@ -32,6 +32,12 @@ provider:
             - arn:aws:dynamodb:us-west-2:*:table/Posts
             - arn:aws:dynamodb:us-west-2:*:table/Communities
             - arn:aws:dynamodb:us-west-2:*:table/Inbox
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
 plugins: []
 functions:
   presignUpload:

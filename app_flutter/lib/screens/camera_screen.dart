@@ -6,6 +6,17 @@ import '../providers/video_provider.dart';
 import '../services/backend_api.dart';
 
 class CameraScreen extends StatefulWidget {
+  final String? prefillHashtag;
+  final String? prefillCommunity;
+  final String? responseToPostId;
+  final String? responseToUsername;
+  const CameraScreen(
+      {Key? key,
+      this.prefillHashtag,
+      this.prefillCommunity,
+      this.responseToPostId,
+      this.responseToUsername})
+      : super(key: key);
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
@@ -15,6 +26,26 @@ class _CameraScreenState extends State<CameraScreen> {
   final TextEditingController _hashtagController = TextEditingController();
   final TextEditingController _communityController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _taggedUsersController = TextEditingController();
+
+  String? _uploadMsg;
+  @override
+  void initState() {
+    super.initState();
+    // Apply prefill if provided
+    if (widget.prefillHashtag != null && widget.prefillHashtag!.isNotEmpty) {
+      _hashtagController.text = widget.prefillHashtag!;
+    }
+    if (widget.prefillCommunity != null &&
+        widget.prefillCommunity!.isNotEmpty) {
+      _communityController.text = widget.prefillCommunity!;
+    }
+    // If it is a response, add a friendly default description prefix
+    if (widget.responseToUsername != null &&
+        widget.responseToUsername!.isNotEmpty) {
+      _descriptionController.text = 'Response to @${widget.responseToUsername}';
+    }
+  }
 
   Future<void> _pickVideo() async {
     final picker = ImagePicker();
@@ -22,6 +53,7 @@ class _CameraScreenState extends State<CameraScreen> {
     if (video != null) {
       setState(() {
         _pickedVideoPath = video.path;
+        _uploadMsg = null;
       });
       // Show dialog to enter description, hashtag, and community
       await showDialog(
@@ -50,6 +82,12 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                   SizedBox(height: 12),
                   TextField(
+                    controller: _taggedUsersController,
+                    decoration: InputDecoration(
+                        labelText: 'Tag users (comma-separated usernames)'),
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
                     controller: _communityController,
                     decoration: InputDecoration(
                       labelText: 'Community',
@@ -65,60 +103,75 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
               ElevatedButton(
                 child: Text('Upload'),
-                onPressed: () {
+                onPressed: () async {
                   Navigator.of(ctx).pop();
+                  // Upload to backend (presign -> S3 upload -> create post)
+                  try {
+                    final api = BackendApi.instance;
+                    final presign =
+                        await api.getPresignedUrl(contentType: 'video/mp4');
+                    await api.uploadToPresignedUrl(
+                      uploadUrl: presign['uploadUrl']!,
+                      file: File(video.path),
+                      contentType: 'video/mp4',
+                    );
+                    final objectKey = presign['objectKey']!;
+                    final taggedUsernames = _taggedUsersController.text
+                        .split(',')
+                        .map((s) => s.trim())
+                        .where((s) => s.isNotEmpty)
+                        .toList();
+                    await api.createPost(
+                      userId: api.currentUserId,
+                      username: api.currentUsername,
+                      videoUrl: objectKey,
+                      description: _descriptionController.text.trim(),
+                      hashtags: _hashtagController.text.isEmpty
+                          ? []
+                          : [_hashtagController.text.trim()],
+                      taggedFriends: const [],
+                      taggedUsernames: taggedUsernames,
+                      taggedCommunities: _communityController.text.isEmpty
+                          ? []
+                          : [_communityController.text.trim()],
+                      responseToPostId: widget.responseToPostId,
+                    );
+                    setState(() {
+                      _uploadMsg = '✅ Uploaded successfully';
+                    });
+                    final provider = context.read<VideoProvider>();
+                    provider.addLocalVideo(
+                      video.path,
+                      description: _descriptionController.text.trim(),
+                      hashtag: _hashtagController.text.trim(),
+                      community: _communityController.text.trim(),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(_uploadMsg!),
+                          backgroundColor: Colors.green),
+                    );
+                  } catch (e) {
+                    String msg = e.toString();
+                    setState(() {
+                      _uploadMsg = '❌ Upload failed: $msg';
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(_uploadMsg!),
+                          backgroundColor: Colors.red),
+                    );
+                  }
+                  _descriptionController.clear();
+                  _hashtagController.clear();
+                  _communityController.clear();
+                  _taggedUsersController.clear();
                 },
               ),
             ],
           );
         },
       );
-      // Upload to backend (presign -> S3 upload -> create post)
-      try {
-        final api = BackendApi.instance;
-        final presign = await api.getPresignedUrl(contentType: 'video/mp4');
-        await api.uploadToPresignedUrl(
-          uploadUrl: presign['uploadUrl']!,
-          file: File(video.path),
-          contentType: 'video/mp4',
-        );
-        // Store the S3 key, backend will generate presigned URLs when fetching
-        final objectKey = presign['objectKey']!;
-        await api.createPost(
-          userId: api.currentUserId,
-          username: api.currentUsername,
-          videoUrl: objectKey, // Just the S3 key
-          description: _descriptionController.text.trim(),
-          hashtags: _hashtagController.text.isEmpty
-              ? []
-              : [_hashtagController.text.trim()],
-          taggedFriends: const [],
-          taggedCommunities: _communityController.text.isEmpty
-              ? []
-              : [_communityController.text.trim()],
-        );
-
-        // Optimistically add to local UI feed with full URL for immediate playback
-        final provider = context.read<VideoProvider>();
-        provider.addLocalVideo(
-          video.path, // Keep local path for immediate playback
-          description: _descriptionController.text.trim(),
-          hashtag: _hashtagController.text.trim(),
-          community: _communityController.text.trim(),
-        );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Uploaded ${video.name}')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
-        );
-      }
-
-      _descriptionController.clear();
-      _hashtagController.clear();
-      _communityController.clear();
     }
   }
 
@@ -143,6 +196,16 @@ class _CameraScreenState extends State<CameraScreen> {
                 Text('Selected video path:'),
                 Text(_pickedVideoPath!,
                     style: TextStyle(fontSize: 12, color: Colors.grey)),
+                if (_uploadMsg != null) ...[
+                  SizedBox(height: 12),
+                  Text(_uploadMsg!,
+                      style: TextStyle(
+                        color: _uploadMsg!.startsWith('✅')
+                            ? Colors.green
+                            : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      )),
+                ]
               ]
             ],
           ),

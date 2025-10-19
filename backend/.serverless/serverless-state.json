@@ -43,6 +43,15 @@
                 "arn:aws:dynamodb:us-west-2:*:table/Communities",
                 "arn:aws:dynamodb:us-west-2:*:table/Inbox"
               ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "*"
             }
           ]
         }
@@ -281,6 +290,9 @@
                       },
                       {
                         "$ref": "$[\"service\"][\"provider\"][\"iam\"][\"role\"][\"statements\"][1]"
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iam\"][\"role\"][\"statements\"][2]"
                       }
                     ]
                   }
@@ -309,7 +321,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/presign.handler",
               "Runtime": "nodejs18.x",
@@ -344,7 +356,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/posts.create",
               "Runtime": "nodejs18.x",
@@ -379,7 +391,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/posts.getAll",
               "Runtime": "nodejs18.x",
@@ -414,7 +426,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/posts.getCommunityFeed",
               "Runtime": "nodejs18.x",
@@ -449,7 +461,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/users.get",
               "Runtime": "nodejs18.x",
@@ -484,7 +496,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/users.update",
               "Runtime": "nodejs18.x",
@@ -519,7 +531,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/inbox.get",
               "Runtime": "nodejs18.x",
@@ -554,7 +566,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/get-video-url.handler",
               "Runtime": "nodejs18.x",
@@ -589,7 +601,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/posts.getUserPosts",
               "Runtime": "nodejs18.x",
@@ -624,7 +636,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/auth.register",
               "Runtime": "nodejs18.x",
@@ -659,7 +671,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/auth.login",
               "Runtime": "nodejs18.x",
@@ -694,7 +706,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/interactions.likePost",
               "Runtime": "nodejs18.x",
@@ -729,7 +741,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/interactions.unlikePost",
               "Runtime": "nodejs18.x",
@@ -764,7 +776,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/interactions.savePost",
               "Runtime": "nodejs18.x",
@@ -799,7 +811,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/interactions.unsavePost",
               "Runtime": "nodejs18.x",
@@ -834,7 +846,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+                "S3Key": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z/tagapp-backend.zip"
               },
               "Handler": "src/interactions.addComment",
               "Runtime": "nodejs18.x",
@@ -862,164 +874,164 @@
               "AddCommentLogGroup"
             ]
           },
-          "PresignUploadLambdaVersion5nNMDHy6mn3CIKONJZM9uZUQs81RAq3vfPHarxTNP2M": {
+          "PresignUploadLambdaVersionxwxaD3QO3cBAuxxTZ8MjBrIB1apt02YQ1chJjurLE": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "PresignUploadLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "CreatePostLambdaVersion4RUbXnplyxT4km87J4LOfIZcRQaHN9JmrtPA3Tzcs": {
+          "CreatePostLambdaVersionT88KPTvWx6ZlAdug0ynSkoj6WEhDQS1nHx1sUuwuT4": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "CreatePostLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "GetAllPostsLambdaVersionl1E6tr7CDjx0zE3lPRFtmqdCgok9M0iBM7HViUIb4": {
+          "GetAllPostsLambdaVersioncZTpu3b6mAnkR6rwVhNbJTZqr0bd2UVdrUVjoVik": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetAllPostsLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "GetCommunityFeedLambdaVersionaXkwASHs30M1E4mmqq4VbXqlS4qljS0OIhGdhhrrfak": {
+          "GetCommunityFeedLambdaVersionFxCvaDeaEsYlaeeWt0fmgtGqC9emUXydHZXyBvWHo": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetCommunityFeedLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "GetUserLambdaVersionvaup7tGKviECA0BlDmHn0j4Et8MH4SYpYuVTy3WTfP4": {
+          "GetUserLambdaVersionXc6Spzyj2Oq2nR1tqFwUWIFVHUeSxvcT5v0HCZ9N8s": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetUserLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "UpdateUserLambdaVersionPL5bXXLAx88amH9gjgvPtKgUUInPraMKYnFNZUZQ": {
+          "UpdateUserLambdaVersionpKgndmAb8p2GyfrpXAsNCGFvID9Sm9xHynIBrPWLecY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "UpdateUserLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "GetInboxLambdaVersionUBqpAWzej222C0l5BiYyA0ZqnaGR4uidg7BpNFgc": {
+          "GetInboxLambdaVersionOgxldbtcIB0U1Dx4dxof2OQZAg6yAbXgXXcBWvLVNs": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetInboxLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "GetVideoUrlLambdaVersionpEFkn3kD2qCF0lYPpteJg4GmFIfni4cJVt6Tz1z9c": {
+          "GetVideoUrlLambdaVersionwWXkwlHMFylPnxcMJ1CgkE350K4tkzMWEneWggXaA": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetVideoUrlLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "GetUserPostsLambdaVersionSPmHGcsGyNmPa5AIZU4Fl6bMJ18Y4oB5FJzhJzOU": {
+          "GetUserPostsLambdaVersionUmB9yFCo4PSosVN8TCSaSsRdZjR5i1NMTFGciLxqCI": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "GetUserPostsLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "RegisterLambdaVersiong6jeIDMgGrFIDPaUDFK5nZRTBEOo7KckMjPbLHczMVM": {
+          "RegisterLambdaVersionPaQ3l0SbYgedOgeUqddB9B7cEkcbJPQmRxdEhNjzvw": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "RegisterLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "LoginLambdaVersionpOkAenuC5RaclSUADsxO4sFxROcN5OYPEVkMJ5koGU": {
+          "LoginLambdaVersion4KrAUJrqLYaWElMmo3gujvLAaLNEAnY8avqxnh9bw": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "LoginLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "LikePostLambdaVersionzJiUENuZ6a6K5REsWfWURBa7QFNSpbSTFjAzVnvPgM": {
+          "LikePostLambdaVersionEOQf7ihmhlhhQkphgy3Gn9Y0A7MnfqbAfv8SF0ouds": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "LikePostLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "UnlikePostLambdaVersionHWWq4rcyMnWgE8omIrk2WEnRvd3Y0pQoeNLLozh6b0": {
+          "UnlikePostLambdaVersiontTAmoTYUXrg792EOy97ssbFsOckz6cwql2k5pBDKZU": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "UnlikePostLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "SavePostLambdaVersionl6RUNQGhkwlgGMhiNX2uLHwTBDBUT2XyreXaLZo0tE": {
+          "SavePostLambdaVersionRHZDJ2zq5ZABNwi1L7cgrL95fVg8pzm3G42IRLYoY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "SavePostLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "UnsavePostLambdaVersionMVLqHO5t8TEaF1WJPAKFq94KbMZMxX7jOpVgTpQ9k4": {
+          "UnsavePostLambdaVersion6OWfszRGrX7pfnFGcrA53Nn5LzOPBw0Kx8Tnd3TPSQs": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "UnsavePostLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
-          "AddCommentLambdaVersionMiPSqsYqstdOlhzRc8DtF7vpgikkhhwVaa4X7AIiCn0": {
+          "AddCommentLambdaVersionyp21XJdGWlqvB4yt1Z8XnmxlBesJkB071b4qbPgnUs": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AddCommentLambdaFunction"
               },
-              "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+              "CodeSha256": "JKNTTlNCcflW8rtssWlOEUjzv+B7TjOuPdr4SeujM8g="
             }
           },
           "HttpApi": {
@@ -2207,7 +2219,7 @@
           "PresignUploadLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "PresignUploadLambdaVersion5nNMDHy6mn3CIKONJZM9uZUQs81RAq3vfPHarxTNP2M"
+              "Ref": "PresignUploadLambdaVersionxwxaD3QO3cBAuxxTZ8MjBrIB1apt02YQ1chJjurLE"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-PresignUploadLambdaFunctionQualifiedArn"
@@ -2216,7 +2228,7 @@
           "CreatePostLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "CreatePostLambdaVersion4RUbXnplyxT4km87J4LOfIZcRQaHN9JmrtPA3Tzcs"
+              "Ref": "CreatePostLambdaVersionT88KPTvWx6ZlAdug0ynSkoj6WEhDQS1nHx1sUuwuT4"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-CreatePostLambdaFunctionQualifiedArn"
@@ -2225,7 +2237,7 @@
           "GetAllPostsLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetAllPostsLambdaVersionl1E6tr7CDjx0zE3lPRFtmqdCgok9M0iBM7HViUIb4"
+              "Ref": "GetAllPostsLambdaVersioncZTpu3b6mAnkR6rwVhNbJTZqr0bd2UVdrUVjoVik"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-GetAllPostsLambdaFunctionQualifiedArn"
@@ -2234,7 +2246,7 @@
           "GetCommunityFeedLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetCommunityFeedLambdaVersionaXkwASHs30M1E4mmqq4VbXqlS4qljS0OIhGdhhrrfak"
+              "Ref": "GetCommunityFeedLambdaVersionFxCvaDeaEsYlaeeWt0fmgtGqC9emUXydHZXyBvWHo"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-GetCommunityFeedLambdaFunctionQualifiedArn"
@@ -2243,7 +2255,7 @@
           "GetUserLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetUserLambdaVersionvaup7tGKviECA0BlDmHn0j4Et8MH4SYpYuVTy3WTfP4"
+              "Ref": "GetUserLambdaVersionXc6Spzyj2Oq2nR1tqFwUWIFVHUeSxvcT5v0HCZ9N8s"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-GetUserLambdaFunctionQualifiedArn"
@@ -2252,7 +2264,7 @@
           "UpdateUserLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UpdateUserLambdaVersionPL5bXXLAx88amH9gjgvPtKgUUInPraMKYnFNZUZQ"
+              "Ref": "UpdateUserLambdaVersionpKgndmAb8p2GyfrpXAsNCGFvID9Sm9xHynIBrPWLecY"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-UpdateUserLambdaFunctionQualifiedArn"
@@ -2261,7 +2273,7 @@
           "GetInboxLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetInboxLambdaVersionUBqpAWzej222C0l5BiYyA0ZqnaGR4uidg7BpNFgc"
+              "Ref": "GetInboxLambdaVersionOgxldbtcIB0U1Dx4dxof2OQZAg6yAbXgXXcBWvLVNs"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-GetInboxLambdaFunctionQualifiedArn"
@@ -2270,7 +2282,7 @@
           "GetVideoUrlLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetVideoUrlLambdaVersionpEFkn3kD2qCF0lYPpteJg4GmFIfni4cJVt6Tz1z9c"
+              "Ref": "GetVideoUrlLambdaVersionwWXkwlHMFylPnxcMJ1CgkE350K4tkzMWEneWggXaA"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-GetVideoUrlLambdaFunctionQualifiedArn"
@@ -2279,7 +2291,7 @@
           "GetUserPostsLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "GetUserPostsLambdaVersionSPmHGcsGyNmPa5AIZU4Fl6bMJ18Y4oB5FJzhJzOU"
+              "Ref": "GetUserPostsLambdaVersionUmB9yFCo4PSosVN8TCSaSsRdZjR5i1NMTFGciLxqCI"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-GetUserPostsLambdaFunctionQualifiedArn"
@@ -2288,7 +2300,7 @@
           "RegisterLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "RegisterLambdaVersiong6jeIDMgGrFIDPaUDFK5nZRTBEOo7KckMjPbLHczMVM"
+              "Ref": "RegisterLambdaVersionPaQ3l0SbYgedOgeUqddB9B7cEkcbJPQmRxdEhNjzvw"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-RegisterLambdaFunctionQualifiedArn"
@@ -2297,7 +2309,7 @@
           "LoginLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "LoginLambdaVersionpOkAenuC5RaclSUADsxO4sFxROcN5OYPEVkMJ5koGU"
+              "Ref": "LoginLambdaVersion4KrAUJrqLYaWElMmo3gujvLAaLNEAnY8avqxnh9bw"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-LoginLambdaFunctionQualifiedArn"
@@ -2306,7 +2318,7 @@
           "LikePostLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "LikePostLambdaVersionzJiUENuZ6a6K5REsWfWURBa7QFNSpbSTFjAzVnvPgM"
+              "Ref": "LikePostLambdaVersionEOQf7ihmhlhhQkphgy3Gn9Y0A7MnfqbAfv8SF0ouds"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-LikePostLambdaFunctionQualifiedArn"
@@ -2315,7 +2327,7 @@
           "UnlikePostLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UnlikePostLambdaVersionHWWq4rcyMnWgE8omIrk2WEnRvd3Y0pQoeNLLozh6b0"
+              "Ref": "UnlikePostLambdaVersiontTAmoTYUXrg792EOy97ssbFsOckz6cwql2k5pBDKZU"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-UnlikePostLambdaFunctionQualifiedArn"
@@ -2324,7 +2336,7 @@
           "SavePostLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "SavePostLambdaVersionl6RUNQGhkwlgGMhiNX2uLHwTBDBUT2XyreXaLZo0tE"
+              "Ref": "SavePostLambdaVersionRHZDJ2zq5ZABNwi1L7cgrL95fVg8pzm3G42IRLYoY"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-SavePostLambdaFunctionQualifiedArn"
@@ -2333,7 +2345,7 @@
           "UnsavePostLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UnsavePostLambdaVersionMVLqHO5t8TEaF1WJPAKFq94KbMZMxX7jOpVgTpQ9k4"
+              "Ref": "UnsavePostLambdaVersion6OWfszRGrX7pfnFGcrA53Nn5LzOPBw0Kx8Tnd3TPSQs"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-UnsavePostLambdaFunctionQualifiedArn"
@@ -2342,7 +2354,7 @@
           "AddCommentLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AddCommentLambdaVersionMiPSqsYqstdOlhzRc8DtF7vpgikkhhwVaa4X7AIiCn0"
+              "Ref": "AddCommentLambdaVersionyp21XJdGWlqvB4yt1Z8XnmxlBesJkB071b4qbPgnUs"
             },
             "Export": {
               "Name": "sls-tagapp-backend-dev-AddCommentLambdaFunctionQualifiedArn"
@@ -2489,7 +2501,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "PresignUploadLambdaVersion5nNMDHy6mn3CIKONJZM9uZUQs81RAq3vfPHarxTNP2M"
+        "versionLogicalId": "PresignUploadLambdaVersionxwxaD3QO3cBAuxxTZ8MjBrIB1apt02YQ1chJjurLE"
       },
       "createPost": {
         "handler": "src/posts.create",
@@ -2509,7 +2521,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "CreatePostLambdaVersion4RUbXnplyxT4km87J4LOfIZcRQaHN9JmrtPA3Tzcs"
+        "versionLogicalId": "CreatePostLambdaVersionT88KPTvWx6ZlAdug0ynSkoj6WEhDQS1nHx1sUuwuT4"
       },
       "getAllPosts": {
         "handler": "src/posts.getAll",
@@ -2529,7 +2541,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "GetAllPostsLambdaVersionl1E6tr7CDjx0zE3lPRFtmqdCgok9M0iBM7HViUIb4"
+        "versionLogicalId": "GetAllPostsLambdaVersioncZTpu3b6mAnkR6rwVhNbJTZqr0bd2UVdrUVjoVik"
       },
       "getCommunityFeed": {
         "handler": "src/posts.getCommunityFeed",
@@ -2549,7 +2561,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "GetCommunityFeedLambdaVersionaXkwASHs30M1E4mmqq4VbXqlS4qljS0OIhGdhhrrfak"
+        "versionLogicalId": "GetCommunityFeedLambdaVersionFxCvaDeaEsYlaeeWt0fmgtGqC9emUXydHZXyBvWHo"
       },
       "getUser": {
         "handler": "src/users.get",
@@ -2569,7 +2581,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "GetUserLambdaVersionvaup7tGKviECA0BlDmHn0j4Et8MH4SYpYuVTy3WTfP4"
+        "versionLogicalId": "GetUserLambdaVersionXc6Spzyj2Oq2nR1tqFwUWIFVHUeSxvcT5v0HCZ9N8s"
       },
       "updateUser": {
         "handler": "src/users.update",
@@ -2589,7 +2601,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "UpdateUserLambdaVersionPL5bXXLAx88amH9gjgvPtKgUUInPraMKYnFNZUZQ"
+        "versionLogicalId": "UpdateUserLambdaVersionpKgndmAb8p2GyfrpXAsNCGFvID9Sm9xHynIBrPWLecY"
       },
       "getInbox": {
         "handler": "src/inbox.get",
@@ -2609,7 +2621,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "GetInboxLambdaVersionUBqpAWzej222C0l5BiYyA0ZqnaGR4uidg7BpNFgc"
+        "versionLogicalId": "GetInboxLambdaVersionOgxldbtcIB0U1Dx4dxof2OQZAg6yAbXgXXcBWvLVNs"
       },
       "getVideoUrl": {
         "handler": "src/get-video-url.handler",
@@ -2629,7 +2641,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "GetVideoUrlLambdaVersionpEFkn3kD2qCF0lYPpteJg4GmFIfni4cJVt6Tz1z9c"
+        "versionLogicalId": "GetVideoUrlLambdaVersionwWXkwlHMFylPnxcMJ1CgkE350K4tkzMWEneWggXaA"
       },
       "getUserPosts": {
         "handler": "src/posts.getUserPosts",
@@ -2649,7 +2661,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "GetUserPostsLambdaVersionSPmHGcsGyNmPa5AIZU4Fl6bMJ18Y4oB5FJzhJzOU"
+        "versionLogicalId": "GetUserPostsLambdaVersionUmB9yFCo4PSosVN8TCSaSsRdZjR5i1NMTFGciLxqCI"
       },
       "register": {
         "handler": "src/auth.register",
@@ -2669,7 +2681,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "RegisterLambdaVersiong6jeIDMgGrFIDPaUDFK5nZRTBEOo7KckMjPbLHczMVM"
+        "versionLogicalId": "RegisterLambdaVersionPaQ3l0SbYgedOgeUqddB9B7cEkcbJPQmRxdEhNjzvw"
       },
       "login": {
         "handler": "src/auth.login",
@@ -2689,7 +2701,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "LoginLambdaVersionpOkAenuC5RaclSUADsxO4sFxROcN5OYPEVkMJ5koGU"
+        "versionLogicalId": "LoginLambdaVersion4KrAUJrqLYaWElMmo3gujvLAaLNEAnY8avqxnh9bw"
       },
       "likePost": {
         "handler": "src/interactions.likePost",
@@ -2709,7 +2721,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "LikePostLambdaVersionzJiUENuZ6a6K5REsWfWURBa7QFNSpbSTFjAzVnvPgM"
+        "versionLogicalId": "LikePostLambdaVersionEOQf7ihmhlhhQkphgy3Gn9Y0A7MnfqbAfv8SF0ouds"
       },
       "unlikePost": {
         "handler": "src/interactions.unlikePost",
@@ -2729,7 +2741,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "UnlikePostLambdaVersionHWWq4rcyMnWgE8omIrk2WEnRvd3Y0pQoeNLLozh6b0"
+        "versionLogicalId": "UnlikePostLambdaVersiontTAmoTYUXrg792EOy97ssbFsOckz6cwql2k5pBDKZU"
       },
       "savePost": {
         "handler": "src/interactions.savePost",
@@ -2749,7 +2761,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "SavePostLambdaVersionl6RUNQGhkwlgGMhiNX2uLHwTBDBUT2XyreXaLZo0tE"
+        "versionLogicalId": "SavePostLambdaVersionRHZDJ2zq5ZABNwi1L7cgrL95fVg8pzm3G42IRLYoY"
       },
       "unsavePost": {
         "handler": "src/interactions.unsavePost",
@@ -2769,7 +2781,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "UnsavePostLambdaVersionMVLqHO5t8TEaF1WJPAKFq94KbMZMxX7jOpVgTpQ9k4"
+        "versionLogicalId": "UnsavePostLambdaVersion6OWfszRGrX7pfnFGcrA53Nn5LzOPBw0Kx8Tnd3TPSQs"
       },
       "addComment": {
         "handler": "src/interactions.addComment",
@@ -2789,7 +2801,7 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "AddCommentLambdaVersionMiPSqsYqstdOlhzRc8DtF7vpgikkhhwVaa4X7AIiCn0"
+        "versionLogicalId": "AddCommentLambdaVersionyp21XJdGWlqvB4yt1Z8XnmxlBesJkB071b4qbPgnUs"
       }
     },
     "configValidationMode": "warn",
@@ -2812,7 +2824,7 @@
     "artifact": "C:\\Users\\arind\\Music\\TAG\\TagApp\\backend\\.serverless\\tagapp-backend.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z",
+    "artifactDirectoryName": "serverless/tagapp-backend/dev/1760889934022-2025-10-19T16:05:34.022Z",
     "artifact": "tagapp-backend.zip"
   }
 }

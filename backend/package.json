@@ -6,7 +6,8 @@
   "scripts": {
     "deploy": "serverless deploy",
     "remove": "serverless remove",
-    "clean:videos": "node ./scripts/cleanup.js"
+    "clean:videos": "node ./scripts/cleanup.js",
+    "reset:all": "node ./scripts/reset_all.js"
   },
   "dependencies": {
     "aws-sdk": "^2.1566.0",

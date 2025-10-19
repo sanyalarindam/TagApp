@@ -14,6 +14,29 @@ export const create = async (event) => {
     const postId = uuid();
     const now = new Date().toISOString();
 
+    // Resolve tagged users by username, if provided
+    const taggedUsernames = Array.isArray(body.taggedUsernames)
+      ? body.taggedUsernames.filter(Boolean).map((s) => String(s).trim().toLowerCase())
+      : [];
+    let resolvedFriendIds = [];
+    if (taggedUsernames.length > 0) {
+      try {
+        const usersScan = await doc.scan({
+          TableName: USERS,
+          ProjectionExpression: 'userId, username',
+        }).promise();
+        const wanted = new Set(taggedUsernames);
+        for (const u of usersScan.Items || []) {
+          const uname = (u.username || '').toString().trim().toLowerCase();
+          if (wanted.has(uname)) {
+            resolvedFriendIds.push(u.userId);
+          }
+        }
+      } catch (e) {
+        console.error('Failed resolving taggedUsernames:', e);
+      }
+    }
+
     const item = {
       postId,
       userId: body.userId,
@@ -21,7 +44,8 @@ export const create = async (event) => {
       videoUrl: body.videoUrl, // Now expects full S3 URL from client
       description: body.description || '',
       hashtags: body.hashtags || [],
-      taggedFriends: body.taggedFriends || [],
+      // Store resolved friend IDs; fallback to provided IDs if any
+      taggedFriends: (resolvedFriendIds.length ? resolvedFriendIds : (body.taggedFriends || [])),
       taggedCommunities: body.taggedCommunities || [],
       createdAt: now,
       likes: 0,
@@ -29,6 +53,7 @@ export const create = async (event) => {
       likedBy: [],
       savedBy: [],
       comments: [],
+      responseToPostId: body.responseToPostId || null,
     };
 
     await doc.put({ TableName: POSTS, Item: item }).promise();
@@ -41,6 +66,7 @@ export const create = async (event) => {
           messageId: uuid(),
           type: 'tag',
           fromUserId: item.userId,
+          fromUsername: item.username,
           postId,
           createdAt: now,
           read: false,
@@ -50,6 +76,32 @@ export const create = async (event) => {
 
     if (friendMessages.length) {
       await doc.batchWrite({ RequestItems: { [INBOX]: friendMessages } }).promise();
+    }
+
+    // If this is a response, notify the original uploader
+    if (item.responseToPostId) {
+      try {
+        const original = await doc.get({ TableName: POSTS, Key: { postId: item.responseToPostId } }).promise();
+        const originalItem = original.Item;
+        if (originalItem && originalItem.userId && originalItem.userId !== item.userId) {
+          await doc.put({
+            TableName: INBOX,
+            Item: {
+              userId: originalItem.userId,
+              messageId: uuid(),
+              type: 'response',
+              fromUserId: item.userId,
+              fromUsername: item.username,
+              postId,
+              originalPostId: item.responseToPostId,
+              createdAt: now,
+              read: false,
+            },
+          }).promise();
+        }
+      } catch (e) {
+        console.error('Failed to send response inbox message:', e);
+      }
     }
 
     // Update uploader uploads list (simple append)
