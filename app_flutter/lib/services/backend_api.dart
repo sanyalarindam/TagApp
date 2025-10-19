@@ -135,6 +135,23 @@ class BackendApi {
     return data.map((e) => e.toString()).toList();
   }
 
+  Future<Map<String, dynamic>> verifyVideo({
+    required String objectKey,
+    required String description,
+  }) async {
+    final res = await http.post(Uri.parse('$baseUrl/verify'),
+        headers: {'content-type': 'application/json'},
+        body: jsonEncode({
+          'video_s3_bucket': 'tagapp-videos',
+          'video_s3_key': objectKey,
+          'description': description,
+        }));
+    if (res.statusCode != 200) {
+      throw Exception('verify failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
   Future<List<Map<String, dynamic>>> getAllPosts() async {
     final res = await http.get(Uri.parse('$baseUrl/posts'));
     if (res.statusCode != 200) throw Exception('getAllPosts failed');
@@ -145,6 +162,12 @@ class BackendApi {
   Future<Map<String, dynamic>> getUser(String userId) async {
     final res = await http.get(Uri.parse('$baseUrl/users/$userId'));
     if (res.statusCode != 200) throw Exception('getUser failed');
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getUserRank(String userId) async {
+    final res = await http.get(Uri.parse('$baseUrl/users/$userId/rank'));
+    if (res.statusCode != 200) throw Exception('getUserRank failed');
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
 

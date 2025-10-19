@@ -11,6 +11,9 @@ provider:
     COMMUNITIES_TABLE: Communities
     INBOX_TABLE: Inbox
     JWT_SECRET: ${env:TAGAPP_JWT_SECRET, 'dev-secret-change-me'}
+    BEDROCK_INFERENCE_PROFILE_ARN: ${env:BEDROCK_INFERENCE_PROFILE_ARN, ''}
+    BEDROCK_FOUNDATION_MODEL_ID: ${env:BEDROCK_FOUNDATION_MODEL_ID, 'twelvelabs.pegasus-1-2-v1:0'}
+    BEDROCK_REGION: ${env:BEDROCK_REGION, 'us-west-2'}
   iam:
     role:
       statements:
@@ -19,6 +22,12 @@ provider:
             - s3:PutObject
             - s3:GetObject
           Resource: arn:aws:s3:::tagapp-videos/*
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+          Resource:
+            - arn:aws:bedrock:*:*:model/*
+            - arn:aws:bedrock:*:*:inference-profile/*
         - Effect: Allow
           Action:
             - dynamodb:GetItem
@@ -75,6 +84,12 @@ functions:
     events:
       - httpApi:
           path: /users/{userId}
+          method: get
+  getUserRank:
+    handler: src/users.rank
+    events:
+      - httpApi:
+          path: /users/{userId}/rank
           method: get
   updateUser:
     handler: src/users.update
@@ -141,4 +156,11 @@ functions:
     events:
       - httpApi:
           path: /posts/{postId}/comments
+          method: post
+  verifyVideo:
+    handler: verification_lambda/handler.lambda_handler
+    runtime: python3.11
+    events:
+      - httpApi:
+          path: /verify
           method: post

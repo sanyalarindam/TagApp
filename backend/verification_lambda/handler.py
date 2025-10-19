@@ -22,7 +22,7 @@ def check_video_match(video_path, description):
 
     if inference_profile_arn:
         aws_region = _region_from_arn(inference_profile_arn)
-        model_identifier = inference_profile_arn  # Bedrock accepts Inference Profile ARN/ID here
+        model_identifier = None
     else:
         # Foundation model ID path (Pegasus generally requires an inference profile; this may fail with ValidationException)
         aws_region = os.environ.get("BEDROCK_REGION", "us-east-1")
@@ -42,12 +42,20 @@ def check_video_match(video_path, description):
         "mediaSource": {"base64String": video_b64},
         "temperature": 0.0
     }
-    response = bedrock_client.invoke_model(
-        modelId=model_identifier,
-        body=json.dumps(payload),
-        contentType="application/json",
-        accept="application/json"
-    )
+    if inference_profile_arn:
+        response = bedrock_client.invoke_model(
+            inferenceProfileArn=inference_profile_arn,
+            body=json.dumps(payload),
+            contentType="application/json",
+            accept="application/json"
+        )
+    else:
+        response = bedrock_client.invoke_model(
+            modelId=model_identifier,
+            body=json.dumps(payload),
+            contentType="application/json",
+            accept="application/json"
+        )
     raw_body = response["body"].read()
     result_json = json.loads(raw_body.decode("utf-8"))
     message = (
@@ -63,10 +71,18 @@ def check_video_match(video_path, description):
     return False, message
 
 def lambda_handler(event, context):
-    # Expect event to have 'video_s3_bucket', 'video_s3_key', 'description'
-    bucket = event.get('video_s3_bucket')
-    key = event.get('video_s3_key')
-    description = event.get('description', '')
+    # Handle both direct invocation (JSON event) and API Gateway (string body)
+    payload = event
+    try:
+        if isinstance(event, dict) and 'body' in event and isinstance(event['body'], str):
+            payload = json.loads(event['body'] or '{}')
+    except Exception:
+        payload = event
+
+    # Expect payload to have 'video_s3_bucket', 'video_s3_key', 'description'
+    bucket = payload.get('video_s3_bucket')
+    key = payload.get('video_s3_key')
+    description = payload.get('description', '')
 
     tmp_file = f"/tmp/{os.path.basename(key)}"
     s3 = boto3.client('s3')
@@ -75,12 +91,14 @@ def lambda_handler(event, context):
         result, message = check_video_match(tmp_file, description)
         return {
             'statusCode': 200,
+            'headers': {'content-type': 'application/json'},
             'body': json.dumps({'verified': result, 'message': message})
         }
     except Exception as e:
         # Return detailed error for easier debugging upstream
         return {
             'statusCode': 500,
+            'headers': {'content-type': 'application/json'},
             'body': json.dumps({'error': str(e)})
         }
     finally:

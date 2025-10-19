@@ -1,6 +1,7 @@
 import AWS from 'aws-sdk';
 const doc = new AWS.DynamoDB.DocumentClient();
 const USERS = process.env.USERS_TABLE;
+const POSTS = process.env.POSTS_TABLE;
 
 export const get = async (event) => {
   const { userId } = event.pathParameters || {};
@@ -79,4 +80,38 @@ export const update = async (event) => {
     }
   }
   return { statusCode: 204, body: '' };
+};
+
+// Compute user rank based on number of tags/posts created.
+// Dense ranking: users with the same count share the same rank, next rank increments by 1.
+export const rank = async (event) => {
+  try {
+    const { userId } = event.pathParameters || {};
+    if (!userId) return { statusCode: 400, body: 'userId is required' };
+
+    // Scan posts and count by userId (OK for small demo; use GSI in production)
+    const postsScan = await doc.scan({ TableName: POSTS, ProjectionExpression: 'userId' }).promise();
+    const counts = new Map();
+    for (const p of postsScan.Items || []) {
+      const uid = p.userId;
+      if (!uid) continue;
+      counts.set(uid, (counts.get(uid) || 0) + 1);
+    }
+
+    const totalUsers = counts.size;
+    const userCount = counts.get(userId) || 0;
+    // Build sorted unique counts desc for dense ranking
+    const uniqueCountsDesc = Array.from(new Set(counts.values())).sort((a, b) => b - a);
+    const rank = uniqueCountsDesc.length === 0
+      ? 0
+      : (uniqueCountsDesc.indexOf(userCount) + 1);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ userId, tagCount: userCount, rank, totalUsers })
+    };
+  } catch (e) {
+    console.error('rank error', e);
+    return { statusCode: 500, body: 'Internal Server Error' };
+  }
 };

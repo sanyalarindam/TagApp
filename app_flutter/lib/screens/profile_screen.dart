@@ -28,6 +28,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _bio = 'Bio goes here';
   String _avatarUrl =
       'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=facearea&w=256&h=256';
+  int? _rank; // 1-based dense rank
+  int? _tagCount;
 
   @override
   void initState() {
@@ -41,6 +43,21 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
     } catch (_) {
       // not authenticated yet; keep placeholder
+    }
+    _loadRank();
+  }
+
+  Future<void> _loadRank() async {
+    try {
+      final api = BackendApi.instance;
+      final userId = api.currentUserId;
+      final res = await api.getUserRank(userId);
+      setState(() {
+        _rank = (res['rank'] as num?)?.toInt();
+        _tagCount = (res['tagCount'] as num?)?.toInt();
+      });
+    } catch (e) {
+      // Leave as nulls on error; UI will show placeholders
     }
   }
 
@@ -102,12 +119,13 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildStat(
-                context.watch<VideoProvider>().myUploads.length.toString(),
-                'Posts'),
+                (_tagCount ?? context.watch<VideoProvider>().myUploads.length)
+                    .toString(),
+                'Tags'),
             SizedBox(width: 24),
-            _buildStat('100', 'Followers'),
+            _buildStat('100', 'Friends'),
             SizedBox(width: 24),
-            _buildStat('50', 'Following'),
+            _buildStat(_rank != null ? '#${_rank}' : '—', 'Rank'),
           ],
         ),
         SizedBox(height: 8),

@@ -121,6 +121,41 @@ class _CameraScreenState extends State<CameraScreen> {
                         .map((s) => s.trim())
                         .where((s) => s.isNotEmpty)
                         .toList();
+
+                    // Run AI verification; if unavailable or unauthorized, warn but proceed
+                    try {
+                      setState(() {
+                        _uploadMsg = 'Verifying video...';
+                      });
+                      final verify = await api.verifyVideo(
+                        objectKey: objectKey,
+                        description: _descriptionController.text.trim(),
+                      );
+                      final bool verified = (verify['verified'] == true);
+                      if (!verified) {
+                        final String msg = (verify['message'] ??
+                                'Video does not match the description')
+                            .toString();
+                        // Soft-fail: allow post, but show a warning
+                        _uploadMsg =
+                            '⚠️ Verification warning: ' + msg + ' (Proceeding)';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(_uploadMsg!),
+                              backgroundColor: Colors.orange),
+                        );
+                      }
+                    } catch (e) {
+                      // Soft-fail on infrastructure errors (e.g., Unauthorized): proceed with upload
+                      _uploadMsg = '⚠️ Verification unavailable: ' +
+                          e.toString() +
+                          ' (Proceeding)';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(_uploadMsg!),
+                            backgroundColor: Colors.orange),
+                      );
+                    }
                     await api.createPost(
                       userId: api.currentUserId,
                       username: api.currentUsername,
