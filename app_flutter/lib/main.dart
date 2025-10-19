@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/explore_screen.dart';
 import 'screens/friends_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/profile_screen.dart';
@@ -29,7 +28,6 @@ class _MainTabsState extends State<MainTabs> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
     HomeScreen(),
-    ExploreScreen(),
     CameraScreen(),
     FriendsScreen(),
     ProfileScreen(),
@@ -45,8 +43,8 @@ class _MainTabsState extends State<MainTabs> {
         onTap: (i) => setState(() => _currentIndex = i),
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-          BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'Record'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.camera_alt), label: 'Record'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Friends'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
