@@ -58,6 +58,7 @@ class BackendApi {
     await prefs.remove('auth_token');
     await prefs.remove('auth_userId');
     await prefs.remove('auth_username');
+    await prefs.remove('auth_password');
   }
 
   Future<Map<String, String>> getPresignedUrl(
@@ -173,7 +174,54 @@ class BackendApi {
       community: ((post['taggedCommunities'] as List?)?.isNotEmpty ?? false)
           ? (post['taggedCommunities'][0] as String)
           : '',
+      likes: (post['likes'] ?? 0) as int,
+      likedBy: (post['likedBy'] as List?)?.cast<String>() ?? [],
+      savedBy: (post['savedBy'] as List?)?.cast<String>() ?? [],
+      comments: (post['comments'] as List?)?.cast<Map<String, dynamic>>() ?? [],
     );
+  }
+
+  // Interaction APIs
+  Future<Map<String, dynamic>> likePost(String postId, String userId) async {
+    final res = await http.post(Uri.parse('$baseUrl/posts/$postId/like'),
+        headers: {'content-type': 'application/json'},
+        body: jsonEncode({'userId': userId}));
+    if (res.statusCode != 200) throw Exception('likePost failed');
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> unlikePost(String postId, String userId) async {
+    final res = await http.delete(Uri.parse('$baseUrl/posts/$postId/like'),
+        headers: {'content-type': 'application/json'},
+        body: jsonEncode({'userId': userId}));
+    if (res.statusCode != 200) throw Exception('unlikePost failed');
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> savePost(String postId, String userId) async {
+    final res = await http.post(Uri.parse('$baseUrl/posts/$postId/save'),
+        headers: {'content-type': 'application/json'},
+        body: jsonEncode({'userId': userId}));
+    if (res.statusCode != 200) throw Exception('savePost failed');
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> unsavePost(String postId, String userId) async {
+    final res = await http.delete(Uri.parse('$baseUrl/posts/$postId/save'),
+        headers: {'content-type': 'application/json'},
+        body: jsonEncode({'userId': userId}));
+    if (res.statusCode != 200) throw Exception('unsavePost failed');
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> addComment(
+      String postId, String userId, String username, String text) async {
+    final res = await http.post(Uri.parse('$baseUrl/posts/$postId/comments'),
+        headers: {'content-type': 'application/json'},
+        body:
+            jsonEncode({'userId': userId, 'username': username, 'text': text}));
+    if (res.statusCode != 200) throw Exception('addComment failed');
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
 
   // Auth APIs
@@ -188,6 +236,9 @@ class BackendApi {
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     await saveToken(data['token'] as String, data['userId'] as String,
         data['username'] as String);
+    // Store password for re-login after username change
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_password', password);
     return data;
   }
 
@@ -202,6 +253,9 @@ class BackendApi {
     final data = jsonDecode(res.body) as Map<String, dynamic>;
     await saveToken(data['token'] as String, data['userId'] as String,
         data['username'] as String);
+    // Store password for re-login after username change
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_password', password);
     return data;
   }
 }

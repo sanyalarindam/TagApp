@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import '../providers/video_provider.dart';
 import 'video_feed_item.dart';
 import '../services/backend_api.dart';
+import 'edit_profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Widget _buildStat(String value, String label) {
   return Column(
@@ -110,8 +112,66 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         SizedBox(height: 8),
         ElevatedButton(
-          onPressed: () {
-            // Edit profile logic placeholder
+          onPressed: () async {
+            // Open EditProfileScreen and await result
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => EditProfileScreen(
+                  username: _username,
+                  bio: _bio,
+                  avatarUrl: _avatarUrl,
+                ),
+              ),
+            );
+            if (result is Map<String, dynamic>) {
+              final newUsername = result['username'] as String? ?? _username;
+              final newBio = result['bio'] as String? ?? _bio;
+              final newAvatar = result['avatarUrl'] as String? ?? _avatarUrl;
+              setState(() {
+                _username = newUsername;
+                _bio = newBio;
+                _avatarUrl = newAvatar;
+              });
+              // Update backend and refresh auth state
+              try {
+                final api = BackendApi.instance;
+                await api.updateUser(api.currentUserId,
+                    username: newUsername, bio: newBio);
+
+                // Attempt to re-login with new username and previous password
+                // (Assume password is unchanged and available in memory)
+                // You may want to store the password securely in memory/session when user logs in
+                final authProvider = context.read<AuthProvider>();
+                final prefs = await SharedPreferences.getInstance();
+                final prevPassword = prefs.getString('auth_password');
+                if (prevPassword != null && prevPassword.isNotEmpty) {
+                  try {
+                    await api.login(
+                        username: newUsername, password: prevPassword);
+                    authProvider.signInSucceeded();
+                  } catch (e) {
+                    // If login fails, sign out and show error
+                    await authProvider.signOut();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Re-login failed: $e')),
+                    );
+                  }
+                } else {
+                  // If password is not available, sign out and show info
+                  await authProvider.signOut();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Please log in again with your new username.')),
+                  );
+                }
+              } catch (e) {
+                print('Failed to update profile: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to update profile')),
+                );
+              }
+            }
           },
           child: Text('Edit Profile'),
         ),

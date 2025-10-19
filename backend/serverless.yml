@@ -100,3 +100,33 @@ functions:
       - httpApi:
           path: /auth/login
           method: post
+  likePost:
+    handler: src/interactions.likePost
+    events:
+      - httpApi:
+          path: /posts/{postId}/like
+          method: post
+  unlikePost:
+    handler: src/interactions.unlikePost
+    events:
+      - httpApi:
+          path: /posts/{postId}/like
+          method: delete
+  savePost:
+    handler: src/interactions.savePost
+    events:
+      - httpApi:
+          path: /posts/{postId}/save
+          method: post
+  unsavePost:
+    handler: src/interactions.unsavePost
+    events:
+      - httpApi:
+          path: /posts/{postId}/save
+          method: delete
+  addComment:
+    handler: src/interactions.addComment
+    events:
+      - httpApi:
+          path: /posts/{postId}/comments
+          method: post

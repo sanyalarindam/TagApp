@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/video_provider.dart';
 import './_description_fade_text.dart';
 import '../main.dart';
+import '../services/backend_api.dart';
 
 class VideoFeedItem extends StatefulWidget {
   final VideoItem videoItem;
@@ -12,6 +13,15 @@ class VideoFeedItem extends StatefulWidget {
 
   @override
   State<VideoFeedItem> createState() => _VideoFeedItemState();
+}
+
+// Simple view model for comments rendering
+class _ViewComment {
+  final String author;
+  final String text;
+  final DateTime createdAt;
+  _ViewComment(
+      {required this.author, required this.text, required this.createdAt});
 }
 
 class _VideoFeedItemState extends State<VideoFeedItem> {
@@ -65,6 +75,26 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
       await _controller.pause();
     }
 
+    // Always refresh the post from backend before showing comments
+    final provider = context.read<VideoProvider>();
+    final videoItem = widget.videoItem;
+    if (videoItem.id != null && videoItem.id!.isNotEmpty) {
+      final api = BackendApi.instance;
+      try {
+        // Fetch latest post and update provider cache
+        final posts = await api.getAllPosts();
+        final post = posts.firstWhere(
+          (p) => p['postId'] == videoItem.id,
+          orElse: () => <String, dynamic>{},
+        );
+        if (post.isNotEmpty) {
+          provider.cacheItems([api.videoItemFromPost(post)]);
+        }
+      } catch (e) {
+        print('Failed to refresh post for comments: $e');
+      }
+    }
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -78,7 +108,7 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
         final sheetHeight = height * 0.65; // roughly 3/5 to 2/3 of screen
         return SizedBox(
           height: sheetHeight,
-          child: _CommentsSheet(videoPath: widget.videoItem.path),
+          child: _CommentsSheet(videoItem: widget.videoItem),
         );
       },
     );
@@ -91,6 +121,9 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
 
   @override
   Widget build(BuildContext context) {
+    // Always use the freshest copy from provider (contains updated counts/states)
+    final provider = context.watch<VideoProvider>();
+    final currentItem = provider.currentFor(widget.videoItem);
     return Container(
       color: Colors.black,
       child: Stack(
@@ -186,21 +219,16 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                   const SizedBox(height: 24),
                   // Like button
                   _ActionButton(
-                    icon: context
-                            .watch<VideoProvider>()
-                            .isLikedItem(widget.videoItem)
+                    icon: provider.isLikedItem(currentItem)
                         ? Icons.favorite
                         : Icons.favorite_border,
-                    color: context
-                            .watch<VideoProvider>()
-                            .isLikedItem(widget.videoItem)
+                    color: provider.isLikedItem(currentItem)
                         ? Colors.red
                         : Colors.white,
-                    label: '0', // placeholder count
+                    label: currentItem.likes.toString(),
                     onTap: () {
-                      context
-                          .read<VideoProvider>()
-                          .toggleLikeFor(widget.videoItem);
+                      // Basic tap-throttle: disable re-tap while async call likely in-flight by brief delay
+                      provider.toggleLikeFor(currentItem);
                     },
                   ),
                   const SizedBox(height: 24),
@@ -208,30 +236,21 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                   _ActionButton(
                     icon: Icons.comment,
                     color: Colors.white,
-                    label: context
-                        .watch<VideoProvider>()
-                        .commentCount(widget.videoItem.path)
-                        .toString(),
+                    label: currentItem.comments.length.toString(),
                     onTap: _openComments,
                   ),
                   const SizedBox(height: 24),
                   // Save (favorite) button
                   _ActionButton(
-                    icon: context
-                            .watch<VideoProvider>()
-                            .isSavedItem(widget.videoItem)
+                    icon: provider.isSavedItem(currentItem)
                         ? Icons.bookmark
                         : Icons.bookmark_border,
-                    color: context
-                            .watch<VideoProvider>()
-                            .isSavedItem(widget.videoItem)
+                    color: provider.isSavedItem(currentItem)
                         ? Colors.yellow
                         : Colors.white,
                     label: '',
                     onTap: () {
-                      context
-                          .read<VideoProvider>()
-                          .toggleSaveFor(widget.videoItem);
+                      provider.toggleSaveFor(currentItem);
                     },
                   ),
                 ],
@@ -365,8 +384,8 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _CommentsSheet extends StatefulWidget {
-  final String videoPath;
-  const _CommentsSheet({Key? key, required this.videoPath}) : super(key: key);
+  final VideoItem videoItem;
+  const _CommentsSheet({Key? key, required this.videoItem}) : super(key: key);
 
   @override
   State<_CommentsSheet> createState() => _CommentsSheetState();
@@ -374,6 +393,15 @@ class _CommentsSheet extends StatefulWidget {
 
 class _CommentsSheetState extends State<_CommentsSheet> {
   final TextEditingController _textController = TextEditingController();
+
+  DateTime _parseIso(String s) {
+    if (s.isEmpty) return DateTime.now();
+    try {
+      return DateTime.parse(s).toLocal();
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -384,7 +412,23 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<VideoProvider>();
-    final comments = provider.commentsFor(widget.videoPath);
+    final currentItem = provider.currentFor(widget.videoItem);
+    // Backend comments come with fields: username, text, createdAt (ISO)
+    final backendComments = currentItem.comments;
+    final localComments = provider.commentsFor(widget.videoItem.path);
+    // Build a unified list for rendering
+    final List<_ViewComment> comments = [
+      ...backendComments.map((c) => _ViewComment(
+            author: (c['username'] ?? 'Anonymous').toString(),
+            text: (c['text'] ?? '').toString(),
+            createdAt: _parseIso((c['createdAt'] ?? '').toString()),
+          )),
+      ...localComments.map((c) => _ViewComment(
+            author: c.author,
+            text: c.text,
+            createdAt: c.createdAt,
+          )),
+    ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     return SafeArea(
       top: false,
@@ -408,7 +452,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
             child: Row(
               children: [
                 Text(
-                  'Comments (${provider.commentCount(widget.videoPath)})',
+                  'Comments (${comments.length})',
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -515,7 +559,9 @@ class _CommentsSheetState extends State<_CommentsSheet> {
   void _submit() {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
-    context.read<VideoProvider>().addComment(widget.videoPath, 'You', text);
+    context
+        .read<VideoProvider>()
+        .addCommentToPost(widget.videoItem, 'You', text);
     _textController.clear();
   }
 

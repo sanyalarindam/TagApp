@@ -66,6 +66,7 @@ export const login = async (event) => {
       return { statusCode: 400, body: 'username and password are required' };
     }
 
+    // Always use the latest username for login
     const data = await doc
       .scan({
         TableName: USERS,

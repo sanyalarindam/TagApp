@@ -83,6 +83,12 @@
         "LogGroupName": "/aws/lambda/tagapp-backend-dev-createPost"
       }
     },
+    "GetAllPostsLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/tagapp-backend-dev-getAllPosts"
+      }
+    },
     "GetCommunityFeedLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
@@ -129,6 +135,36 @@
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": "/aws/lambda/tagapp-backend-dev-login"
+      }
+    },
+    "LikePostLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/tagapp-backend-dev-likePost"
+      }
+    },
+    "UnlikePostLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/tagapp-backend-dev-unlikePost"
+      }
+    },
+    "SavePostLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/tagapp-backend-dev-savePost"
+      }
+    },
+    "UnsavePostLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/tagapp-backend-dev-unsavePost"
+      }
+    },
+    "AddCommentLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/tagapp-backend-dev-addComment"
       }
     },
     "IamRoleLambdaExecution": {
@@ -241,7 +277,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/presign.handler",
         "Runtime": "nodejs18.x",
@@ -276,7 +312,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/posts.create",
         "Runtime": "nodejs18.x",
@@ -304,6 +340,41 @@
         "CreatePostLogGroup"
       ]
     },
+    "GetAllPostsLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+        },
+        "Handler": "src/posts.getAll",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "tagapp-backend-dev-getAllPosts",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET": "tagapp-videos",
+            "USERS_TABLE": "Users",
+            "POSTS_TABLE": "Posts",
+            "COMMUNITIES_TABLE": "Communities",
+            "INBOX_TABLE": "Inbox",
+            "JWT_SECRET": "dev-secret-change-me"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "GetAllPostsLogGroup"
+      ]
+    },
     "GetCommunityFeedLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -311,7 +382,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/posts.getCommunityFeed",
         "Runtime": "nodejs18.x",
@@ -346,7 +417,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/users.get",
         "Runtime": "nodejs18.x",
@@ -381,7 +452,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/users.update",
         "Runtime": "nodejs18.x",
@@ -416,7 +487,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/inbox.get",
         "Runtime": "nodejs18.x",
@@ -451,7 +522,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/get-video-url.handler",
         "Runtime": "nodejs18.x",
@@ -486,7 +557,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/posts.getUserPosts",
         "Runtime": "nodejs18.x",
@@ -521,7 +592,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/auth.register",
         "Runtime": "nodejs18.x",
@@ -556,7 +627,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/tagapp-backend/dev/1760868781742-2025-10-19T10:13:01.742Z/tagapp-backend.zip"
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
         },
         "Handler": "src/auth.login",
         "Runtime": "nodejs18.x",
@@ -584,104 +655,339 @@
         "LoginLogGroup"
       ]
     },
-    "PresignUploadLambdaVersionKwuAxZPGrTq66IfwBgSplHxKSdv6Gxy5xxN2Cs911s": {
+    "LikePostLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+        },
+        "Handler": "src/interactions.likePost",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "tagapp-backend-dev-likePost",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET": "tagapp-videos",
+            "USERS_TABLE": "Users",
+            "POSTS_TABLE": "Posts",
+            "COMMUNITIES_TABLE": "Communities",
+            "INBOX_TABLE": "Inbox",
+            "JWT_SECRET": "dev-secret-change-me"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "LikePostLogGroup"
+      ]
+    },
+    "UnlikePostLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+        },
+        "Handler": "src/interactions.unlikePost",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "tagapp-backend-dev-unlikePost",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET": "tagapp-videos",
+            "USERS_TABLE": "Users",
+            "POSTS_TABLE": "Posts",
+            "COMMUNITIES_TABLE": "Communities",
+            "INBOX_TABLE": "Inbox",
+            "JWT_SECRET": "dev-secret-change-me"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "UnlikePostLogGroup"
+      ]
+    },
+    "SavePostLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+        },
+        "Handler": "src/interactions.savePost",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "tagapp-backend-dev-savePost",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET": "tagapp-videos",
+            "USERS_TABLE": "Users",
+            "POSTS_TABLE": "Posts",
+            "COMMUNITIES_TABLE": "Communities",
+            "INBOX_TABLE": "Inbox",
+            "JWT_SECRET": "dev-secret-change-me"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "SavePostLogGroup"
+      ]
+    },
+    "UnsavePostLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+        },
+        "Handler": "src/interactions.unsavePost",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "tagapp-backend-dev-unsavePost",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET": "tagapp-videos",
+            "USERS_TABLE": "Users",
+            "POSTS_TABLE": "Posts",
+            "COMMUNITIES_TABLE": "Communities",
+            "INBOX_TABLE": "Inbox",
+            "JWT_SECRET": "dev-secret-change-me"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "UnsavePostLogGroup"
+      ]
+    },
+    "AddCommentLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/tagapp-backend/dev/1760876483266-2025-10-19T12:21:23.266Z/tagapp-backend.zip"
+        },
+        "Handler": "src/interactions.addComment",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "tagapp-backend-dev-addComment",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "S3_BUCKET": "tagapp-videos",
+            "USERS_TABLE": "Users",
+            "POSTS_TABLE": "Posts",
+            "COMMUNITIES_TABLE": "Communities",
+            "INBOX_TABLE": "Inbox",
+            "JWT_SECRET": "dev-secret-change-me"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AddCommentLogGroup"
+      ]
+    },
+    "PresignUploadLambdaVersion5nNMDHy6mn3CIKONJZM9uZUQs81RAq3vfPHarxTNP2M": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "PresignUploadLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "CreatePostLambdaVersionOghfoYFMBTSB01kAvRKzh8ecYedxezc2eDX2JhTzYM": {
+    "CreatePostLambdaVersion4RUbXnplyxT4km87J4LOfIZcRQaHN9JmrtPA3Tzcs": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "CreatePostLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "GetCommunityFeedLambdaVersionkTOZt0cD6IYbNOUDplmITdl8AZJAWhyhjOaCwiEcF4": {
+    "GetAllPostsLambdaVersionl1E6tr7CDjx0zE3lPRFtmqdCgok9M0iBM7HViUIb4": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "GetAllPostsLambdaFunction"
+        },
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+      }
+    },
+    "GetCommunityFeedLambdaVersionaXkwASHs30M1E4mmqq4VbXqlS4qljS0OIhGdhhrrfak": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetCommunityFeedLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "GetUserLambdaVersionmRFjNYrbvNkyZ3zKWnm3WPh8aU04Tw49ButfllDEkw": {
+    "GetUserLambdaVersionvaup7tGKviECA0BlDmHn0j4Et8MH4SYpYuVTy3WTfP4": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetUserLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "UpdateUserLambdaVersionorhDQucWf8OZjdL63BevMW8M6K71fu4B6tbOY04": {
+    "UpdateUserLambdaVersionPL5bXXLAx88amH9gjgvPtKgUUInPraMKYnFNZUZQ": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UpdateUserLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "GetInboxLambdaVersionlZoE2Xyf5ja0EOX2Xh1rcH3cdq5yaUv186aJdrmqYa8": {
+    "GetInboxLambdaVersionUBqpAWzej222C0l5BiYyA0ZqnaGR4uidg7BpNFgc": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetInboxLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "GetVideoUrlLambdaVersionz0L8bKfMeqAibNnDdgf1N7bNyaY950ibaTfOkMSGCkM": {
+    "GetVideoUrlLambdaVersionpEFkn3kD2qCF0lYPpteJg4GmFIfni4cJVt6Tz1z9c": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetVideoUrlLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "GetUserPostsLambdaVersion0UzR7jZCw0boGj9eQP70euVx8DSwxdcEEQMEIqa120": {
+    "GetUserPostsLambdaVersionSPmHGcsGyNmPa5AIZU4Fl6bMJ18Y4oB5FJzhJzOU": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetUserPostsLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "RegisterLambdaVersion9zo6I1L7FJ6FwYkrjHTUPQdScNR9vjuaeL2GtxFk": {
+    "RegisterLambdaVersiong6jeIDMgGrFIDPaUDFK5nZRTBEOo7KckMjPbLHczMVM": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "RegisterLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
-    "LoginLambdaVersiondnph5AHav8qTaqF2nke1jJ24qC8kdbXwLYrHT90nv4": {
+    "LoginLambdaVersionpOkAenuC5RaclSUADsxO4sFxROcN5OYPEVkMJ5koGU": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "LoginLambdaFunction"
         },
-        "CodeSha256": "H+X5bVC2dNbvy37npIenIHfjjmNChc1diJLkcNTHufk="
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+      }
+    },
+    "LikePostLambdaVersionzJiUENuZ6a6K5REsWfWURBa7QFNSpbSTFjAzVnvPgM": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "LikePostLambdaFunction"
+        },
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+      }
+    },
+    "UnlikePostLambdaVersionHWWq4rcyMnWgE8omIrk2WEnRvd3Y0pQoeNLLozh6b0": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "UnlikePostLambdaFunction"
+        },
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+      }
+    },
+    "SavePostLambdaVersionl6RUNQGhkwlgGMhiNX2uLHwTBDBUT2XyreXaLZo0tE": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "SavePostLambdaFunction"
+        },
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+      }
+    },
+    "UnsavePostLambdaVersionMVLqHO5t8TEaF1WJPAKFq94KbMZMxX7jOpVgTpQ9k4": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "UnsavePostLambdaFunction"
+        },
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
+      }
+    },
+    "AddCommentLambdaVersionMiPSqsYqstdOlhzRc8DtF7vpgikkhhwVaa4X7AIiCn0": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AddCommentLambdaFunction"
+        },
+        "CodeSha256": "J/yFF5dG5fUvXzJG3GSifCSxmtTzxcLd74xwoNd9iRY="
       }
     },
     "HttpApi": {
@@ -853,6 +1159,81 @@
         }
       },
       "DependsOn": "HttpApiIntegrationCreatePost"
+    },
+    "GetAllPostsLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetAllPostsLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationGetAllPosts": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "GetAllPostsLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteGetPosts": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "GET /posts",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationGetAllPosts"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationGetAllPosts"
     },
     "GetCommunityFeedLambdaPermissionHttpApi": {
       "Type": "AWS::Lambda::Permission",
@@ -1453,6 +1834,381 @@
         }
       },
       "DependsOn": "HttpApiIntegrationLogin"
+    },
+    "LikePostLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LikePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationLikePost": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "LikePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostPostsPostidVarLike": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /posts/{postId}/like",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationLikePost"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationLikePost"
+    },
+    "UnlikePostLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UnlikePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationUnlikePost": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "UnlikePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteDeletePostsPostidVarLike": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "DELETE /posts/{postId}/like",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationUnlikePost"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationUnlikePost"
+    },
+    "SavePostLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SavePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationSavePost": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "SavePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostPostsPostidVarSave": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /posts/{postId}/save",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationSavePost"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationSavePost"
+    },
+    "UnsavePostLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UnsavePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationUnsavePost": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "UnsavePostLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteDeletePostsPostidVarSave": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "DELETE /posts/{postId}/save",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationUnsavePost"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationUnsavePost"
+    },
+    "AddCommentLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AddCommentLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationAddComment": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "AddCommentLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRoutePostPostsPostidVarComments": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "POST /posts/{postId}/comments",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationAddComment"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationAddComment"
     }
   },
   "Outputs": {
@@ -1467,7 +2223,7 @@
     "PresignUploadLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "PresignUploadLambdaVersionKwuAxZPGrTq66IfwBgSplHxKSdv6Gxy5xxN2Cs911s"
+        "Ref": "PresignUploadLambdaVersion5nNMDHy6mn3CIKONJZM9uZUQs81RAq3vfPHarxTNP2M"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-PresignUploadLambdaFunctionQualifiedArn"
@@ -1476,16 +2232,25 @@
     "CreatePostLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "CreatePostLambdaVersionOghfoYFMBTSB01kAvRKzh8ecYedxezc2eDX2JhTzYM"
+        "Ref": "CreatePostLambdaVersion4RUbXnplyxT4km87J4LOfIZcRQaHN9JmrtPA3Tzcs"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-CreatePostLambdaFunctionQualifiedArn"
       }
     },
+    "GetAllPostsLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "GetAllPostsLambdaVersionl1E6tr7CDjx0zE3lPRFtmqdCgok9M0iBM7HViUIb4"
+      },
+      "Export": {
+        "Name": "sls-tagapp-backend-dev-GetAllPostsLambdaFunctionQualifiedArn"
+      }
+    },
     "GetCommunityFeedLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetCommunityFeedLambdaVersionkTOZt0cD6IYbNOUDplmITdl8AZJAWhyhjOaCwiEcF4"
+        "Ref": "GetCommunityFeedLambdaVersionaXkwASHs30M1E4mmqq4VbXqlS4qljS0OIhGdhhrrfak"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-GetCommunityFeedLambdaFunctionQualifiedArn"
@@ -1494,7 +2259,7 @@
     "GetUserLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetUserLambdaVersionmRFjNYrbvNkyZ3zKWnm3WPh8aU04Tw49ButfllDEkw"
+        "Ref": "GetUserLambdaVersionvaup7tGKviECA0BlDmHn0j4Et8MH4SYpYuVTy3WTfP4"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-GetUserLambdaFunctionQualifiedArn"
@@ -1503,7 +2268,7 @@
     "UpdateUserLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UpdateUserLambdaVersionorhDQucWf8OZjdL63BevMW8M6K71fu4B6tbOY04"
+        "Ref": "UpdateUserLambdaVersionPL5bXXLAx88amH9gjgvPtKgUUInPraMKYnFNZUZQ"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-UpdateUserLambdaFunctionQualifiedArn"
@@ -1512,7 +2277,7 @@
     "GetInboxLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetInboxLambdaVersionlZoE2Xyf5ja0EOX2Xh1rcH3cdq5yaUv186aJdrmqYa8"
+        "Ref": "GetInboxLambdaVersionUBqpAWzej222C0l5BiYyA0ZqnaGR4uidg7BpNFgc"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-GetInboxLambdaFunctionQualifiedArn"
@@ -1521,7 +2286,7 @@
     "GetVideoUrlLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetVideoUrlLambdaVersionz0L8bKfMeqAibNnDdgf1N7bNyaY950ibaTfOkMSGCkM"
+        "Ref": "GetVideoUrlLambdaVersionpEFkn3kD2qCF0lYPpteJg4GmFIfni4cJVt6Tz1z9c"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-GetVideoUrlLambdaFunctionQualifiedArn"
@@ -1530,7 +2295,7 @@
     "GetUserPostsLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetUserPostsLambdaVersion0UzR7jZCw0boGj9eQP70euVx8DSwxdcEEQMEIqa120"
+        "Ref": "GetUserPostsLambdaVersionSPmHGcsGyNmPa5AIZU4Fl6bMJ18Y4oB5FJzhJzOU"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-GetUserPostsLambdaFunctionQualifiedArn"
@@ -1539,7 +2304,7 @@
     "RegisterLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "RegisterLambdaVersion9zo6I1L7FJ6FwYkrjHTUPQdScNR9vjuaeL2GtxFk"
+        "Ref": "RegisterLambdaVersiong6jeIDMgGrFIDPaUDFK5nZRTBEOo7KckMjPbLHczMVM"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-RegisterLambdaFunctionQualifiedArn"
@@ -1548,10 +2313,55 @@
     "LoginLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "LoginLambdaVersiondnph5AHav8qTaqF2nke1jJ24qC8kdbXwLYrHT90nv4"
+        "Ref": "LoginLambdaVersionpOkAenuC5RaclSUADsxO4sFxROcN5OYPEVkMJ5koGU"
       },
       "Export": {
         "Name": "sls-tagapp-backend-dev-LoginLambdaFunctionQualifiedArn"
+      }
+    },
+    "LikePostLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "LikePostLambdaVersionzJiUENuZ6a6K5REsWfWURBa7QFNSpbSTFjAzVnvPgM"
+      },
+      "Export": {
+        "Name": "sls-tagapp-backend-dev-LikePostLambdaFunctionQualifiedArn"
+      }
+    },
+    "UnlikePostLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "UnlikePostLambdaVersionHWWq4rcyMnWgE8omIrk2WEnRvd3Y0pQoeNLLozh6b0"
+      },
+      "Export": {
+        "Name": "sls-tagapp-backend-dev-UnlikePostLambdaFunctionQualifiedArn"
+      }
+    },
+    "SavePostLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "SavePostLambdaVersionl6RUNQGhkwlgGMhiNX2uLHwTBDBUT2XyreXaLZo0tE"
+      },
+      "Export": {
+        "Name": "sls-tagapp-backend-dev-SavePostLambdaFunctionQualifiedArn"
+      }
+    },
+    "UnsavePostLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "UnsavePostLambdaVersionMVLqHO5t8TEaF1WJPAKFq94KbMZMxX7jOpVgTpQ9k4"
+      },
+      "Export": {
+        "Name": "sls-tagapp-backend-dev-UnsavePostLambdaFunctionQualifiedArn"
+      }
+    },
+    "AddCommentLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AddCommentLambdaVersionMiPSqsYqstdOlhzRc8DtF7vpgikkhhwVaa4X7AIiCn0"
+      },
+      "Export": {
+        "Name": "sls-tagapp-backend-dev-AddCommentLambdaFunctionQualifiedArn"
       }
     },
     "HttpApiId": {

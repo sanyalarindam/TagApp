@@ -8,6 +8,10 @@ class VideoItem {
   final String description;
   final String hashtag;
   final String community;
+  final int likes;
+  final List<String> likedBy;
+  final List<String> savedBy;
+  final List<Map<String, dynamic>> comments;
 
   VideoItem({
     this.id,
@@ -16,6 +20,10 @@ class VideoItem {
     this.hashtag = '',
     this.community = '',
     DateTime? createdAt,
+    this.likes = 0,
+    this.likedBy = const [],
+    this.savedBy = const [],
+    this.comments = const [],
   }) : createdAt = createdAt ?? DateTime.now();
 }
 
@@ -39,6 +47,9 @@ class VideoProvider extends ChangeNotifier {
   final Map<String, VideoItem> _cacheByKey = {};
   final Set<String> _likedKeys = {}; // liked videos by key
   final Set<String> _savedKeys = {}; // saved videos by key
+  // In-flight toggle guards to avoid rapid duplicate requests
+  final Set<String> _likeInFlight = {};
+  final Set<String> _saveInFlight = {};
   // path -> list of comments
   final Map<String, List<Comment>> _comments = {};
 
@@ -69,6 +80,12 @@ class VideoProvider extends ChangeNotifier {
 
   bool isLikedItem(VideoItem v) => _likedKeys.contains(_keyFor(v));
   bool isSavedItem(VideoItem v) => _savedKeys.contains(_keyFor(v));
+
+  // Return the most up-to-date cached version of a video item
+  VideoItem currentFor(VideoItem v) {
+    final key = _keyFor(v);
+    return _cacheByKey[key] ?? v;
+  }
 
   // Comments API
   List<Comment> commentsFor(String path) =>
@@ -107,25 +124,128 @@ class VideoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // New id/path aware toggles
-  void toggleLikeFor(VideoItem v) {
+  // New id/path aware toggles with backend sync
+  Future<void> toggleLikeFor(VideoItem v) async {
     final key = _keyFor(v);
-    if (_likedKeys.contains(key)) {
+    if (_likeInFlight.contains(key)) return; // prevent spam
+    _likeInFlight.add(key);
+    final wasLiked = _likedKeys.contains(key);
+
+    // Optimistic update
+    if (wasLiked) {
       _likedKeys.remove(key);
     } else {
       _likedKeys.add(key);
     }
     notifyListeners();
+
+    // Sync to backend if we have a postId
+    if (v.id != null && v.id!.isNotEmpty) {
+      try {
+        final api = BackendApi.instance;
+        final userId = api.currentUserId;
+        final updated = wasLiked
+            ? await api.unlikePost(v.id!, userId)
+            : await api.likePost(v.id!, userId);
+
+        // Update cached item with new data
+        final newItem = api.videoItemFromPost(updated);
+        _cacheByKey[key] = newItem;
+        notifyListeners();
+      } catch (e) {
+        // Revert optimistic update on error
+        if (wasLiked) {
+          _likedKeys.add(key);
+        } else {
+          _likedKeys.remove(key);
+        }
+        notifyListeners();
+        print('Failed to sync like: $e');
+        rethrow;
+      } finally {
+        _likeInFlight.remove(key);
+      }
+    } else {
+      // No backend id; clear in-flight guard
+      _likeInFlight.remove(key);
+    }
   }
 
-  void toggleSaveFor(VideoItem v) {
+  Future<void> toggleSaveFor(VideoItem v) async {
     final key = _keyFor(v);
-    if (_savedKeys.contains(key)) {
+    if (_saveInFlight.contains(key)) return;
+    _saveInFlight.add(key);
+    final wasSaved = _savedKeys.contains(key);
+
+    // Optimistic update
+    if (wasSaved) {
       _savedKeys.remove(key);
     } else {
       _savedKeys.add(key);
     }
     notifyListeners();
+
+    // Sync to backend if we have a postId
+    if (v.id != null && v.id!.isNotEmpty) {
+      try {
+        final api = BackendApi.instance;
+        final userId = api.currentUserId;
+        final updated = wasSaved
+            ? await api.unsavePost(v.id!, userId)
+            : await api.savePost(v.id!, userId);
+
+        final newItem = api.videoItemFromPost(updated);
+        _cacheByKey[key] = newItem;
+        notifyListeners();
+      } catch (e) {
+        // Revert on error
+        if (wasSaved) {
+          _savedKeys.add(key);
+        } else {
+          _savedKeys.remove(key);
+        }
+        notifyListeners();
+        print('Failed to sync save: $e');
+        rethrow;
+      } finally {
+        _saveInFlight.remove(key);
+      }
+    } else {
+      _saveInFlight.remove(key);
+    }
+  }
+
+  // Comment with backend sync
+  Future<void> addCommentToPost(VideoItem v, String author, String text) async {
+    if (text.trim().isEmpty) return;
+
+    // Optimistic local update
+    final list = _comments.putIfAbsent(v.path, () => []);
+    final tempComment =
+        Comment(id: UniqueKey().toString(), author: author, text: text.trim());
+    list.add(tempComment);
+    notifyListeners();
+
+    // Sync to backend if we have a postId
+    if (v.id != null && v.id!.isNotEmpty) {
+      try {
+        final api = BackendApi.instance;
+        final userId = api.currentUserId;
+        final username = api.currentUsername;
+        final updated =
+            await api.addComment(v.id!, userId, username, text.trim());
+
+        // Update cached item with backend comments
+        final newItem = api.videoItemFromPost(updated);
+        _cacheByKey[_keyFor(v)] = newItem;
+        // Clear local optimistic comments now that backend has the source of truth
+        _comments[v.path] = [];
+        notifyListeners();
+      } catch (e) {
+        print('Failed to sync comment: $e');
+        // Keep local comment even if backend fails
+      }
+    }
   }
 
   // Legacy helpers for places still using path directly
@@ -183,8 +303,20 @@ class VideoProvider extends ChangeNotifier {
 
   // Cache a list of items (e.g., from Explore or Community feeds)
   void cacheItems(List<VideoItem> items) {
+    final api = BackendApi.instance;
+    final userId = api.currentUserId;
+
     for (final item in items) {
-      _cacheByKey[_keyFor(item)] = item;
+      final key = _keyFor(item);
+      _cacheByKey[key] = item;
+
+      // Hydrate liked/saved state from backend
+      if (item.likedBy.contains(userId)) {
+        _likedKeys.add(key);
+      }
+      if (item.savedBy.contains(userId)) {
+        _savedKeys.add(key);
+      }
     }
     notifyListeners();
   }

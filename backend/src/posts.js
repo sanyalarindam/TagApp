@@ -26,6 +26,9 @@ export const create = async (event) => {
       createdAt: now,
       likes: 0,
       saves: 0,
+      likedBy: [],
+      savedBy: [],
+      comments: [],
     };
 
     await doc.put({ TableName: POSTS, Item: item }).promise();
