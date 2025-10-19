@@ -2,10 +2,153 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/video_provider.dart';
 import 'screens/home_screen.dart';
-import 'screens/friends_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/video_feed_item.dart';
+
+class InboxScreen extends StatelessWidget {
+  final List<Map<String, String>> _messages = const [
+    {
+      'username': 'Username',
+      'action': 'Tagged you!',
+      'hashtag': '#Backflip',
+      'time': '3d',
+    },
+    {
+      'username': 'Username',
+      'action': 'Responded to your tag!',
+      'hashtag': '#Rapp Snitches Lick',
+      'time': '4d',
+    },
+    {
+      'username': 'Username',
+      'action': 'Tagged you!',
+      'hashtag': '#Front flip',
+      'time': '3w',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.inbox, size: 36, color: Colors.black),
+                SizedBox(width: 12),
+                Text('Inbox',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline)),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Expanded(
+              child: ListView.separated(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: _messages.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                itemBuilder: (ctx, i) {
+                  final msg = _messages[i];
+                  return Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.black26, width: 1),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Colors.grey[300],
+                              child: const Icon(Icons.person,
+                                  size: 32, color: Colors.black54),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  RichText(
+                                    text: TextSpan(
+                                      style: const TextStyle(
+                                          fontSize: 16, color: Colors.black),
+                                      children: [
+                                        TextSpan(
+                                            text: msg['username'] ?? '',
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                        TextSpan(
+                                            text: ' ${msg['action'] ?? ''}'),
+                                      ],
+                                    ),
+                                  ),
+                                  if ((msg['hashtag'] ?? '').isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2.0),
+                                      child: Text(msg['hashtag']!,
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black87)),
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0),
+                                    child: Text(msg['time']!,
+                                        style: const TextStyle(
+                                            fontSize: 13, color: Colors.grey)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 90,
+                            height: 70,
+                            margin: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[400],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text('Preview',
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.black)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // Placeholder for communities screen
 class CommunityFeedScreen extends StatelessWidget {
@@ -321,7 +464,7 @@ class _MainTabsState extends State<MainTabs> {
     HomeScreen(),
     CommunitiesScreen(),
     CameraScreen(),
-    FriendsScreen(),
+    InboxScreen(),
     ProfileScreen(),
   ];
 
@@ -339,7 +482,7 @@ class _MainTabsState extends State<MainTabs> {
               icon: Icon(Icons.groups), label: 'Communities'),
           BottomNavigationBarItem(
               icon: Icon(Icons.camera_alt), label: 'Record'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_offer), label: 'Tags'),
+          BottomNavigationBarItem(icon: Icon(Icons.inbox), label: 'Inbox'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
