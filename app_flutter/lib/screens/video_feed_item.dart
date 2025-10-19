@@ -64,7 +64,8 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
       ..initialize().then((_) {
         if (!mounted) return;
         setState(() => _isInitialized = true);
-        _controller.play();
+        // Avoid auto-playing immediately to reduce emulator load; tap to play
+        // _controller.play();
       });
   }
 

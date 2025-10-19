@@ -64,6 +64,12 @@ functions:
       - httpApi:
           path: /communities/{communityId}/posts
           method: get
+  listCommunities:
+    handler: src/communities.list
+    events:
+      - httpApi:
+          path: /communities
+          method: get
   getUser:
     handler: src/users.get
     events:

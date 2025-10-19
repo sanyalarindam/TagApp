@@ -58,6 +58,25 @@ export const create = async (event) => {
 
     await doc.put({ TableName: POSTS, Item: item }).promise();
 
+    // Upsert communities referenced by this post into Communities table
+    if ((item.taggedCommunities || []).length) {
+      for (const name of item.taggedCommunities) {
+        const commName = (name || '').toString().trim();
+        if (!commName) continue;
+        try {
+          // Use normalized lowercase key but preserve display name
+          await doc
+            .put({
+              TableName: process.env.COMMUNITIES_TABLE,
+              Item: { id: commName.toLowerCase(), name: commName },
+            })
+            .promise();
+        } catch (e) {
+          console.warn('Failed to upsert community', commName, e.code || e.message);
+        }
+      }
+    }
+
     // Fan-out inbox messages
     const friendMessages = (item.taggedFriends || []).map((toUserId) => ({
       PutRequest: {

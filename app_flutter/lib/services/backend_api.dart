@@ -128,6 +128,13 @@ class BackendApi {
     return data.cast<Map<String, dynamic>>();
   }
 
+  Future<List<String>> listCommunities() async {
+    final res = await http.get(Uri.parse('$baseUrl/communities'));
+    if (res.statusCode != 200) throw Exception('listCommunities failed');
+    final data = jsonDecode(res.body) as List;
+    return data.map((e) => e.toString()).toList();
+  }
+
   Future<List<Map<String, dynamic>>> getAllPosts() async {
     final res = await http.get(Uri.parse('$baseUrl/posts'));
     if (res.statusCode != 200) throw Exception('getAllPosts failed');

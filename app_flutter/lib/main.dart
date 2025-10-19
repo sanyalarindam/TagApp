@@ -366,16 +366,7 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
                             child: Text('No videos in ${widget.community}',
                                 style: const TextStyle(
                                     fontSize: 18, color: Colors.white)))
-                        : RefreshIndicator(
-                            onRefresh: _fetch,
-                            child: PageView.builder(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              scrollDirection: Axis.vertical,
-                              itemCount: _videos.length,
-                              itemBuilder: (_, i) =>
-                                  VideoFeedItem(videoItem: _videos[i]),
-                            ),
-                          ),
+                        : _FeedPager(videos: _videos, onRefresh: _fetch),
           ),
           // Gradient header overlay with title and close button
           Positioned(
@@ -442,6 +433,42 @@ class _CommunityFeedScreenState extends State<CommunityFeedScreen> {
   }
 }
 
+class _FeedPager extends StatefulWidget {
+  final List<VideoItem> videos;
+  final Future<void> Function() onRefresh;
+  const _FeedPager({Key? key, required this.videos, required this.onRefresh})
+      : super(key: key);
+  @override
+  State<_FeedPager> createState() => _FeedPagerState();
+}
+
+class _FeedPagerState extends State<_FeedPager> {
+  final PageController _controller = PageController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: widget.onRefresh,
+      child: PageView.builder(
+        controller: _controller,
+        physics: const AlwaysScrollableScrollPhysics(),
+        scrollDirection: Axis.vertical,
+        itemCount: widget.videos.length,
+        onPageChanged: (i) {},
+        itemBuilder: (_, i) {
+          return VideoFeedItem(videoItem: widget.videos[i]);
+        },
+      ),
+    );
+  }
+}
+
 class CommunitiesScreen extends StatefulWidget {
   @override
   State<CommunitiesScreen> createState() => _CommunitiesScreenState();
@@ -451,7 +478,7 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
   final TextEditingController _searchController = TextEditingController();
   int _currentPage = 1;
   static const int _perPage = 6;
-  final List<String> _allCommunities = [
+  List<String> _allCommunities = [
     'Guitar',
     'Parkour',
     'Basketball',
@@ -465,6 +492,32 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
     'Photography',
     'Travel'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCommunities();
+  }
+
+  Future<void> _loadCommunities() async {
+    try {
+      final api = BackendApi.instance;
+      final remote = await api.listCommunities();
+      // Merge and de-duplicate
+      final set = {
+        ..._allCommunities.map((e) => e.trim()),
+        ...remote.map((e) => e.trim())
+      }.where((s) => s.isNotEmpty).toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      if (!mounted) return;
+      setState(() {
+        _allCommunities = set;
+      });
+    } catch (e) {
+      // Keep defaults on failure; optionally show a toast
+      debugPrint('Failed to load communities: $e');
+    }
+  }
 
   List<String> get _filteredCommunities {
     final query = _searchController.text.trim().toLowerCase();
