@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import '../providers/video_provider.dart';
 import './_description_fade_text.dart';
+import '../main.dart';
 
 class VideoFeedItem extends StatefulWidget {
   final VideoItem videoItem;
@@ -253,20 +254,31 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  // Community
-                  Text(
-                    widget.videoItem.community,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 4.0,
-                          color: Colors.black,
-                          offset: Offset(1, 1),
+                  // Community (clickable)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CommunityFeedScreen(
+                              community: widget.videoItem.community),
                         ),
-                      ],
+                      );
+                    },
+                    child: Text(
+                      widget.videoItem.community,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4.0,
+                            color: Colors.black,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
