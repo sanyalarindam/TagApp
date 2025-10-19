@@ -1,0 +1,15 @@
+# Global ignores
+node_modules/
+**/node_modules/
+.env
+.env.*
+*.log
+.DS_Store
+.idea/
+.vscode/
+dist/
+build/
+coverage/
+.serverless/
+.dart_tool/
+pubspec.lock
